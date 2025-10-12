@@ -182,10 +182,13 @@
   padding-left: 25px;
 }
 
-/* Sidebar Collapsed State */
-.sidebar.collapsed {
-  transform: translateX(-355px);
+/* Sidebar Collapsed State - Desktop Only */
+@media (min-width: 769px) {
+  .sidebar.collapsed {
+    transform: translateX(-355px);
+  }
 }
+
 .sidebar.collapsed .image-container,
 .sidebar.collapsed h1,
 .sidebar.collapsed ul {
@@ -198,13 +201,27 @@
   border: none;
   cursor: pointer;
   font-size: 24px;
-  position: fixed;
+  position: absolute;
   top: 150px;
-  right: 10px;
+  right: 12.5px;
   color: #1f1f1f;
   z-index: 3;
   transition: transform 0.5s ease;
+  width: 20px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
 }
+
+/* Desktop specific positioning */
+@media (min-width: 769px) {
+  .arrow-btn {
+    right: 10px;
+  }
+}
+
 .arrow-btn.rotate {
   transform: rotate(180deg);
 }

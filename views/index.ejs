@@ -176,6 +176,8 @@
         // On mobile, start with sidebar collapsed
         sidebar.classList.add('collapsed');
         collapseBtn.style.transform = 'rotate(180deg)';
+        // Ensure main content is positioned correctly
+        container.classList.add('sidebar-collapsed');
       } else {
         sidebar.classList.remove('collapsed');
         container.classList.remove('sidebar-collapsed');

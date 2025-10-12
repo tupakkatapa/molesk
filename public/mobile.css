@@ -6,7 +6,7 @@
 
   /* Mobile sidebar overlay */
   .sidebar {
-    transform: translateX(-100%);
+    transform: translateX(calc(-100% + 45px));
     z-index: 1000;
     box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
   }
@@ -16,13 +16,12 @@
   }
 
   .main {
-    margin-left: 0;
-    width: 100%;
+    margin-left: 45px;
+    width: calc(100% - 45px);
   }
 
   /* Mobile overlay backdrop */
   .sidebar-backdrop {
-    display: none;
     position: fixed;
     top: 0;
     left: 0;
@@ -30,10 +29,16 @@
     height: 100%;
     background: rgba(0, 0, 0, 0.5);
     z-index: 999;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity 0.3s ease,
+      visibility 0.3s ease;
   }
 
   .sidebar-backdrop.active {
-    display: block;
+    opacity: 1;
+    visibility: visible;
   }
 
   /* Content action buttons on mobile - optimized touch targets */
@@ -78,16 +83,18 @@
   /* Optimize touch targets */
   .sidebar a {
     padding: 8px 12px;
-    min-height: 44px;
+    min-height: auto; /* Remove min-height to let content determine size */
     display: inline-flex;
     align-items: center;
+    line-height: 1.2; /* Tighter line height for better visual balance */
   }
 
   .sidebar .folder > span {
     padding: 8px 12px;
-    min-height: 44px;
+    min-height: auto; /* Remove min-height to let content determine size */
     display: inline-flex;
     align-items: center;
+    line-height: 1.2; /* Tighter line height for better visual balance */
   }
 
   .sidebar i {
@@ -96,9 +103,14 @@
   }
 
   .arrow-btn {
-    width: 48px;
+    width: 45px;
     height: 48px;
     font-size: 20px;
+    right: 0;
+    position: fixed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .metadata {
