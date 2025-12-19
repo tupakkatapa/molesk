@@ -14,6 +14,22 @@ const IGNORED_FILES = [];
 const IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png"];
 const MD_EXTENSIONS = [".md", ".txt"];
 
+// Security: HTML entity escaping
+const escapeHtml = (str) =>
+  String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
+// Security: Validate path is within allowed directory
+const isPathSafe = (basePath, requestedPath) => {
+  const resolvedBase = path.resolve(basePath);
+  const resolvedPath = path.resolve(path.join(basePath, requestedPath));
+  return resolvedPath.startsWith(resolvedBase + path.sep) || resolvedPath === resolvedBase;
+};
+
 // Error messages
 const ERROR_MESSAGES = {
   UNSUPPORTED_FILE: "File type not supported",
@@ -132,6 +148,24 @@ parseArgs();
 
 // --- Express App Setup ---
 const app = express();
+
+// Security: CSP and other security headers
+app.use((req, res, next) => {
+  res.setHeader(
+    "Content-Security-Policy",
+    "default-src 'self'; " +
+    "script-src 'self' 'unsafe-inline' https://code.jquery.com https://cdnjs.cloudflare.com; " +
+    "style-src 'self' 'unsafe-inline' https://code.jquery.com https://cdnjs.cloudflare.com; " +
+    "font-src 'self' https://cdnjs.cloudflare.com; " +
+    "img-src 'self' data:; " +
+    "frame-ancestors 'none';"
+  );
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  next();
+});
+
 app.use(express.static(path.join(__dirname, "public")));
 app.use(favicon(path.join(__dirname, "public", "favicon.ico")));
 app.set("view engine", "ejs");
@@ -139,7 +173,7 @@ app.set("views", path.join(__dirname, "views"));
 
 // --- MarkdownIt Setup ---
 const md = new MarkdownIt({
-  html: true,
+  html: false, // Security: Disable raw HTML to prevent XSS
   typographer: true,
   linkify: true,
   highlight: (str, lang) => {
@@ -218,6 +252,10 @@ async function serveStaticFile(filePath, res) {
 app.get(
   "/download/:path(*)",
   asyncHandler(async (req, res) => {
+    // Security: Validate path traversal
+    if (!isPathSafe(CONTENTS_DIR, req.params.path)) {
+      return res.status(403).send("Access denied");
+    }
     const filePath = path.join(CONTENTS_DIR, req.params.path);
     if (!MD_EXTENSIONS.includes(path.extname(filePath).toLowerCase())) {
       return res.status(400).send(ERROR_MESSAGES.UNSUPPORTED_FILE);
@@ -264,6 +302,10 @@ app.get(
 app.get(
   "/content/:path(*)",
   asyncHandler(async (req, res) => {
+    // Security: Validate path traversal
+    if (!isPathSafe(CONTENTS_DIR, req.params.path)) {
+      return res.status(403).send("Access denied");
+    }
     const filePath = path.join(CONTENTS_DIR, req.params.path);
     const ext = path.extname(filePath).toLowerCase();
 
@@ -457,8 +499,9 @@ async function parseFileContent(data, filePath) {
 }
 
 function metadataToHtml(meta) {
+  // Security: Escape date to prevent XSS
   return meta.date
-    ? `<div class="metadata"><span class="meta-date">${meta.date}</span></div>`
+    ? `<div class="metadata"><span class="meta-date">${escapeHtml(meta.date)}</span></div>`
     : "";
 }
 
@@ -531,24 +574,28 @@ async function generateFolderStructure(dir, isRoot = true, currentPath = null) {
 
   for (const item of detailedItems) {
     if (item.isDirectory) {
+      // Security: Escape folder name to prevent XSS
+      const safeFolderName = escapeHtml(capitalize(item.name));
       structure.push(
-        `<li class="folder open"><span><i class="fas fa-folder-open"></i> ${capitalize(item.name)}</span>`,
+        `<li class="folder open"><span><i class="fas fa-folder-open"></i> ${safeFolderName}</span>`,
       );
       structure.push(item.content);
     } else {
-      const itemName = capitalize(
+      // Security: Escape file name to prevent XSS
+      const itemName = escapeHtml(capitalize(
         path.basename(item.name, path.extname(item.name)),
-      );
+      ));
       const icon =
         itemName.toLowerCase() === "home"
           ? '<i class="fas fa-home"></i>'
           : '<i class="fas fa-file-alt"></i>';
-      const relPath = path
+      const relPath = encodeURI(path
         .relative(CONTENTS_DIR, item.path)
         .split(path.sep)
-        .join("/");
+        .join("/"));
+      // Security: Escape date to prevent XSS
       const dateDisplay = item.date
-        ? `<div class="file-date">${item.date}</div>`
+        ? `<div class="file-date">${escapeHtml(item.date)}</div>`
         : "";
       const isActive = currentPath && `/content/${relPath}` === currentPath;
       const activeClass = isActive ? ' class="active"' : "";
