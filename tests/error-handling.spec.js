@@ -89,6 +89,14 @@ test.describe("Error Handling", () => {
       route.abort(),
     );
 
+    // On mobile, open sidebar first so theme toggle is accessible
+    const viewportSize = page.viewportSize();
+    if (viewportSize && viewportSize.width <= 768) {
+      const collapseBtn = page.locator("#collapseSidebar");
+      await collapseBtn.click();
+      await page.waitForTimeout(300);
+    }
+
     // Page should still function
     const themeToggle = page.locator("#themeToggleIcon");
     await expect(themeToggle).toBeVisible();
@@ -217,6 +225,14 @@ test.describe("Error Handling", () => {
 
   test("concurrent theme toggles handled", async ({ page }) => {
     await page.goto("/");
+
+    // On mobile, open sidebar first so theme toggle is accessible
+    const viewportSize = page.viewportSize();
+    if (viewportSize && viewportSize.width <= 768) {
+      const collapseBtn = page.locator("#collapseSidebar");
+      await collapseBtn.click();
+      await page.waitForTimeout(300);
+    }
 
     const themeToggle = page.locator("#themeToggleIcon");
     const body = page.locator("body");

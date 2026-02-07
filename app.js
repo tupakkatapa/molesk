@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 const express = require("express");
+const compression = require("compression");
 const MarkdownIt = require("markdown-it");
 const markdownItAnchor = require("markdown-it-anchor");
 const hljs = require("highlight.js");
 const fs = require("fs").promises;
+const fsSync = require("fs");
 const path = require("path");
 const yaml = require("js-yaml");
 const favicon = require("serve-favicon");
@@ -27,7 +29,10 @@ const escapeHtml = (str) =>
 const isPathSafe = (basePath, requestedPath) => {
   const resolvedBase = path.resolve(basePath);
   const resolvedPath = path.resolve(path.join(basePath, requestedPath));
-  return resolvedPath.startsWith(resolvedBase + path.sep) || resolvedPath === resolvedBase;
+  return (
+    resolvedPath.startsWith(resolvedBase + path.sep) ||
+    resolvedPath === resolvedBase
+  );
 };
 
 // Error messages
@@ -146,19 +151,34 @@ Options:
 
 parseArgs();
 
+// --- Folder Structure Cache ---
+const folderStructureCache = new Map();
+
+// Watch CONTENTS_DIR for changes and invalidate cache
+try {
+  fsSync.watch(CONTENTS_DIR, { recursive: true }, () => {
+    folderStructureCache.clear();
+  });
+} catch (err) {
+  console.error("Failed to set up file watcher:", err.message);
+}
+
 // --- Express App Setup ---
 const app = express();
+
+// Compression middleware (gzip)
+app.use(compression());
 
 // Security: CSP and other security headers
 app.use((req, res, next) => {
   res.setHeader(
     "Content-Security-Policy",
     "default-src 'self'; " +
-    "script-src 'self' 'unsafe-inline' https://code.jquery.com https://cdnjs.cloudflare.com; " +
-    "style-src 'self' 'unsafe-inline' https://code.jquery.com https://cdnjs.cloudflare.com; " +
-    "font-src 'self' https://cdnjs.cloudflare.com; " +
-    "img-src 'self' data:; " +
-    "frame-ancestors 'none';"
+      "script-src 'self' https://cdnjs.cloudflare.com; " +
+      "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; " +
+      "font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; " +
+      "img-src 'self' data:; " +
+      "frame-ancestors 'none';",
   );
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("X-Frame-Options", "DENY");
@@ -166,7 +186,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, "public"), { maxAge: "1h" }));
 app.use(favicon(path.join(__dirname, "public", "favicon.ico")));
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
@@ -261,7 +281,9 @@ app.get(
       return res.status(400).send(ERROR_MESSAGES.UNSUPPORTED_FILE);
     }
     await fs.access(filePath);
-    res.download(filePath);
+    const prefix = NAME.toLowerCase().replace(/\s+/g, "_");
+    const downloadName = `${prefix}_${path.basename(filePath).toLowerCase()}`;
+    res.download(filePath, downloadName);
   }),
 );
 
@@ -271,6 +293,25 @@ app.get(
   asyncHandler(async (req, res) => {
     if (!IMAGE) return res.status(404).send("Image not found");
     await serveStaticFile(IMAGE, res);
+  }),
+);
+
+// Serve circular favicon from profile image
+app.get(
+  "/favicon.svg",
+  asyncHandler(async (req, res) => {
+    if (!IMAGE) return res.status(404).send("Favicon not found");
+    const data = await fs.readFile(IMAGE);
+    const mimeModule = await import("mime");
+    const mimeType = mimeModule.default.getType(IMAGE) || "image/png";
+    const base64 = data.toString("base64");
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+<defs><clipPath id="c"><circle cx="50" cy="50" r="50"/></clipPath></defs>
+<image href="data:${mimeType};base64,${base64}" width="100" height="100" clip-path="url(#c)" preserveAspectRatio="xMidYMid slice"/>
+</svg>`;
+    res.setHeader("Content-Type", "image/svg+xml");
+    res.setHeader("Cache-Control", "public, max-age=3600");
+    res.send(svg);
   }),
 );
 
@@ -506,6 +547,11 @@ function metadataToHtml(meta) {
 }
 
 async function generateFolderStructure(dir, isRoot = true, currentPath = null) {
+  const cacheKey = `${dir}:${currentPath || ""}`;
+  if (isRoot && folderStructureCache.has(cacheKey)) {
+    return folderStructureCache.get(cacheKey);
+  }
+
   const items = await fs.readdir(dir, { withFileTypes: true });
   const structure = ["<ul>"];
   const detailedItems = [];
@@ -582,17 +628,16 @@ async function generateFolderStructure(dir, isRoot = true, currentPath = null) {
       structure.push(item.content);
     } else {
       // Security: Escape file name to prevent XSS
-      const itemName = escapeHtml(capitalize(
-        path.basename(item.name, path.extname(item.name)),
-      ));
+      const itemName = escapeHtml(
+        capitalize(path.basename(item.name, path.extname(item.name))),
+      );
       const icon =
         itemName.toLowerCase() === "home"
           ? '<i class="fas fa-home"></i>'
           : '<i class="fas fa-file-alt"></i>';
-      const relPath = encodeURI(path
-        .relative(CONTENTS_DIR, item.path)
-        .split(path.sep)
-        .join("/"));
+      const relPath = encodeURI(
+        path.relative(CONTENTS_DIR, item.path).split(path.sep).join("/"),
+      );
       // Security: Escape date to prevent XSS
       const dateDisplay = item.date
         ? `<div class="file-date">${escapeHtml(item.date)}</div>`
@@ -613,7 +658,11 @@ async function generateFolderStructure(dir, isRoot = true, currentPath = null) {
     }
   }
   structure.push("</ul>");
-  return structure.join("");
+  const result = structure.join("");
+  if (isRoot) {
+    folderStructureCache.set(cacheKey, result);
+  }
+  return result;
 }
 
 // Global error logging

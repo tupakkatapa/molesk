@@ -63,7 +63,7 @@ test.describe("Content Loading & Navigation", () => {
     await page.goto("/content/Home.md");
 
     // Download button should be present
-    const downloadBtn = page.locator(".download-button");
+    const downloadBtn = page.locator(".download-icon");
     await expect(downloadBtn).toBeVisible();
 
     // Should have correct download URL
@@ -76,14 +76,14 @@ test.describe("Content Loading & Navigation", () => {
   test("RSS feed is accessible", async ({ page }) => {
     await page.goto("/");
 
-    // RSS button should be present
-    const rssBtn = page.locator(".rss-button");
+    // RSS copy-link button should be present in social links bar
+    const rssBtn = page.locator(".rss-copy-link");
     await expect(rssBtn).toBeVisible();
 
-    // Should link to RSS feed
-    await expect(rssBtn).toHaveAttribute("href", "/rss.xml");
+    // Should have RSS URL in data attribute
+    await expect(rssBtn).toHaveAttribute("data-rss-url", "/rss.xml");
 
-    // RSS feed should be accessible
+    // RSS feed endpoint should be accessible
     const response = await page.request.get("/rss.xml");
     expect(response.status()).toBe(200);
 

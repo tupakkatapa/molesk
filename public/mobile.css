@@ -41,39 +41,31 @@
     visibility: visible;
   }
 
-  /* Content action buttons on mobile - optimized touch targets */
-  .download-icon,
-  .rss-icon,
-  .src-icon,
-  .theme-toggle {
+  /* Download button on mobile - optimized touch target */
+  .download-icon {
     font-size: 14px;
     width: 44px;
     height: 44px;
     padding: 12px;
     bottom: 15px;
+    right: 10px;
     border-radius: 8px;
   }
 
-  /* Adjust mobile button positions - horizontal at bottom with better spacing */
-  .theme-toggle {
-    right: 10px;
+  /* Theme toggle on mobile */
+  .sidebar .theme-toggle {
+    top: 15px;
+    left: 15px;
+    width: 44px;
+    height: 44px;
+    font-size: 16px;
   }
-  .download-icon {
-    right: 64px;
-  }
-  .src-icon {
-    right: 118px;
-  }
-  .rss-icon {
-    right: 172px;
-  }
-
-  /* Theme toggle moved to content area */
 
   .navigation-buttons div {
     margin: 3px 0;
   }
-  .sidebar h1 {
+  .sidebar h1,
+  .sidebar .site-name {
     font-size: 16px;
   }
   .sidebar ul {
@@ -124,17 +116,17 @@
   }
 
   .main .markdown-body h1 {
-    font-size: 16px;
+    font-size: 20px;
   }
   .main .markdown-body h2 {
-    font-size: 14px;
+    font-size: 18px;
   }
   .main .markdown-body h3 {
-    font-size: 12px;
+    font-size: 16px;
   }
   .main .markdown-body p,
   .main .markdown-body li {
-    font-size: 10px;
+    font-size: 14px;
   }
 
   .markdown-body code,

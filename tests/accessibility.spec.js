@@ -110,10 +110,13 @@ test.describe("Accessibility", () => {
 
     for (const theme of themes) {
       if (theme === "dark") {
-        // Toggle to dark theme
-        const themeToggle = page.locator("#themeToggleIcon");
-        await themeToggle.scrollIntoViewIfNeeded();
-        await themeToggle.click({ force: true });
+        // Toggle to dark theme via JavaScript (reliable on all viewports)
+        await page.evaluate(() => {
+          const isDarkTheme = document.body.classList.toggle("dark-theme");
+          localStorage.setItem("theme", isDarkTheme ? "dark" : "light");
+          document.getElementById("highlightjs-light").disabled = isDarkTheme;
+          document.getElementById("highlightjs-dark").disabled = !isDarkTheme;
+        });
         await page.waitForTimeout(100); // Wait for theme to apply
       }
 

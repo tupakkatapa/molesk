@@ -1,104 +1,96 @@
 /* Dark Theme Base Styles */
 .dark-theme {
-  background-color: #121212;
-  color: #fff;
+  background-color: #1a1812;
+  color: #ddd5c8;
 }
 
-/* Content action buttons dark theme */
-.dark-theme .download-icon,
-.dark-theme .rss-icon,
-.dark-theme .src-icon,
-.dark-theme .theme-toggle {
-  color: #999 !important;
-  background: none;
+/* Download button dark theme */
+.dark-theme .download-icon {
+  color: #9a9080 !important;
 }
 
-.dark-theme .download-icon:hover,
-.dark-theme .rss-icon:hover,
-.dark-theme .src-icon:hover,
-.dark-theme .theme-toggle:hover {
-  color: #fff !important;
+.dark-theme .download-icon:hover {
+  color: #ddd5c8 !important;
 }
-
-/* Theme toggle moved to content area */
 
 /* Sidebar Styles in Dark Theme */
 .dark-theme .sidebar {
-  background-color: #1f1f1f;
-  border: 1px solid #333;
+  background-color: #201d15;
+  border: 1px solid #3a3529;
 }
 
 .dark-theme .sidebar h1,
 .dark-theme .sidebar h2,
+.dark-theme .sidebar .site-name,
 .dark-theme .sidebar a {
-  color: #eee;
+  color: #e8e0d4;
 }
 .dark-theme .social-link {
-  color: #999;
+  color: #9a9080;
 }
 
 .dark-theme .social-link:hover {
-  color: #fff;
+  color: #ddd5c8;
 }
 .dark-theme .social-links-bar {
-  border-top: 1px solid #333;
+  border-top: 1px solid #3a3529;
 }
 
 .dark-theme .sidebar .image-container img {
-  border: 3px solid #333;
+  border: 3px solid #3a3529;
 }
 
 .dark-theme .sidebar a:hover {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.08);
+  color: #ddd5c8;
+  background: rgba(221, 213, 200, 0.08);
 }
 
 .dark-theme .sidebar .folder > span:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
+  background: rgba(221, 213, 200, 0.08);
+  color: #ddd5c8;
 }
 
 .dark-theme .sidebar li.active a {
-  background: rgba(255, 255, 255, 0.12);
-  color: #eee;
+  background: rgba(221, 213, 200, 0.12);
+  color: #e8e0d4;
 }
 
 .dark-theme .sidebar li.active a:hover {
-  background: rgba(255, 255, 255, 0.16);
-  color: #fff;
+  background: rgba(221, 213, 200, 0.16);
+  color: #ddd5c8;
 }
 
 .dark-theme .sidebar li.folder > a {
-  color: #eee;
+  color: #e8e0d4;
 }
 
 .dark-theme .sidebar li.folder > a:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
+  background: rgba(221, 213, 200, 0.08);
+  color: #ddd5c8;
 }
 
 .dark-theme .sidebar li.folder.active > a {
-  background: rgba(255, 255, 255, 0.12);
-  color: #eee;
+  background: rgba(221, 213, 200, 0.12);
+  color: #e8e0d4;
 }
 
 .dark-theme .sidebar li.folder.active > a:hover {
-  background: rgba(255, 255, 255, 0.16);
-  color: #fff;
+  background: rgba(221, 213, 200, 0.16);
+  color: #ddd5c8;
 }
 
 /* Markdown Body Styles in Dark Theme */
 .dark-theme .markdown-body {
-  background-color: #1f1f1f;
-  color: #e8e8e8;
-  border: 1px solid #333;
+  background-color: #242118;
+  color: #ddd5c8;
+  border: 1px solid #3a3529;
 }
 
 .dark-theme .header-anchor::after {
-  color: #eee;
+  color: #e8e0d4;
 }
 .dark-theme .copy-button {
-  color: #eee;
+  color: #e8e0d4;
 }
 
 .dark-theme .markdown-body h1,
@@ -107,7 +99,7 @@
 .dark-theme .markdown-body h4,
 .dark-theme .markdown-body h5,
 .dark-theme .markdown-body h6 {
-  color: #eee;
+  color: #e8e0d4;
 }
 
 .dark-theme .markdown-body h1 a,
@@ -121,42 +113,47 @@
 }
 
 .dark-theme .markdown-body a {
-  color: #1e90ff;
+  color: #c9956a;
 }
 .dark-theme .markdown-body blockquote {
-  color: #aaa;
-  border-left-color: #666;
+  color: #9a9080;
+  border-left-color: #5a5040;
 }
 
 .dark-theme .markdown-body code,
 .dark-theme .markdown-body pre {
-  background-color: #2a2a2a;
+  background-color: #2e2a20;
 }
 
 .dark-theme .markdown-body th,
 .dark-theme .markdown-body td {
-  border-color: #333;
+  border-color: #3a3529;
 }
 
 .dark-theme .markdown-body th {
-  background-color: #333;
-  color: #eee;
+  background-color: #332e24;
+  color: #e8e0d4;
 }
 
 .dark-theme .markdown-body tr:nth-child(even) {
-  background-color: #2a2a2a;
+  background-color: #2c2820;
 }
 
 /* Metadata Styles */
 .dark-theme .metadata {
-  color: #aaa;
-  border-bottom-color: #333;
+  color: #9a9080;
+  border-bottom-color: #3a3529;
 }
 
 /* Additional Dark Theme Styles */
 .dark-theme .arrow-btn {
-  color: #f7f7f7;
+  color: #ddd5c8;
 }
-.dark-theme #darkModeToggle + label {
-  background: #f5f5f5;
+
+.dark-theme .sidebar .theme-toggle {
+  color: #9a9080;
+}
+
+.dark-theme .sidebar .theme-toggle:hover {
+  color: #ddd5c8;
 }
