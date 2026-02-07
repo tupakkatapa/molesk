@@ -171,7 +171,9 @@ function parseArgs() {
 }
 
 function displayHelp() {
-  console.log(`Usage: molesk [file.md|directory] [options]
+  const cmd =
+    path.basename(process.argv[1]) === "molesk" ? "molesk" : "node app.js";
+  console.log(`Usage: ${cmd} [file.md|directory] [options]
 
 Arguments:
   file.md             Open a single markdown file in viewer mode
@@ -191,9 +193,9 @@ Options:
   --no-download       Hide download button on content
 
 Examples:
-  molesk README.md              View single file (opens browser)
-  molesk ./docs                 Serve docs directory
-  molesk -o ./blog              Serve blog and open browser`);
+  ${cmd} README.md${" ".repeat(14 - cmd.length)}View single file (opens browser)
+  ${cmd} ./docs${" ".repeat(17 - cmd.length)}Serve docs directory
+  ${cmd} -o ./blog${" ".repeat(14 - cmd.length)}Serve blog and open browser`);
 }
 
 // Open URL in default browser

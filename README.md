@@ -114,7 +114,13 @@ date: "2024-03-30"
 Can also be run directly without the NixOS module:
 
 ```shell
+# With Nix
 nix run github:tupakkatapa/molesk -- [options]
+
+# With Node.js
+git clone https://github.com/tupakkatapa/molesk && cd molesk
+npm install
+node app.js [options]
 ```
 
 ```
