@@ -120,3 +120,33 @@ body.single-file-mode .single-file-theme-toggle {
 body.single-file-mode .single-file-theme-toggle:hover {
   color: #3b3428;
 }
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Theme transition using View Transitions API */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  z-index: 9999;
+  animation: theme-ripple-reveal 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes theme-ripple-reveal {
+  0% {
+    clip-path: circle(0px at var(--ripple-x) var(--ripple-y));
+  }
+  100% {
+    clip-path: circle(var(--max-radius) at var(--ripple-x) var(--ripple-y));
+  }
+}

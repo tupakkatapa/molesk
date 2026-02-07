@@ -116,13 +116,52 @@
   color: #c9956a;
 }
 .dark-theme .markdown-body blockquote {
+  color: #b8a898;
+}
+
+.dark-theme .markdown-body blockquote::before {
+  background-color: #c9956a;
+}
+
+.dark-theme .markdown-body ::selection {
+  background-color: rgba(201, 149, 106, 0.35);
+}
+
+.dark-theme .markdown-body mark {
+  background-color: rgba(201, 149, 106, 0.3);
+}
+
+/* Code header dark theme */
+.dark-theme .code-header {
+  background-color: #1e1b14;
+  border-bottom-color: #3a3529;
+}
+
+.dark-theme .code-language {
   color: #9a9080;
-  border-left-color: #5a5040;
+}
+
+.dark-theme .copy-button {
+  color: #9a9080;
+}
+
+.dark-theme .copy-button:hover {
+  color: #ddd5c8;
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Line numbers dark theme */
+.dark-theme .code-wrapper pre code .line-number {
+  color: #6a6258;
 }
 
 .dark-theme .markdown-body code,
 .dark-theme .markdown-body pre {
   background-color: #2e2a20;
+}
+
+.dark-theme .markdown-body table {
+  border-color: #3a3529;
 }
 
 .dark-theme .markdown-body th,
