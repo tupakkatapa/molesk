@@ -4,13 +4,15 @@ const compression = require("compression");
 const rateLimit = require("express-rate-limit");
 const MarkdownIt = require("markdown-it");
 const markdownItAnchor = require("markdown-it-anchor");
-const hljs = require("highlight.js");
 const fs = require("fs").promises;
 const fsSync = require("fs");
 const path = require("path");
 const yaml = require("js-yaml");
 const favicon = require("serve-favicon");
 const RSS = require("rss");
+
+// Cache ESM mime module (v4 is ESM-only)
+const mimePromise = import("mime").then((m) => m.default);
 
 // Constants & Defaults
 const IGNORED_FILES = [];
@@ -152,13 +154,16 @@ Options:
 
 parseArgs();
 
-// --- Folder Structure Cache ---
+// --- Caches ---
 const folderStructureCache = new Map();
+let rssFeedCache = null;
+let profileImageCache = null;
 
-// Watch CONTENTS_DIR for changes and invalidate cache
+// Watch CONTENTS_DIR for changes and invalidate caches
 try {
   fsSync.watch(CONTENTS_DIR, { recursive: true }, () => {
     folderStructureCache.clear();
+    rssFeedCache = null;
   });
 } catch (err) {
   console.error("Failed to set up file watcher:", err.message);
@@ -214,17 +219,6 @@ const md = new MarkdownIt({
   html: false, // Security: Disable raw HTML to prevent XSS
   typographer: true,
   linkify: true,
-  highlight: (str, lang) => {
-    if (lang && hljs.getLanguage(lang)) {
-      try {
-        return hljs.highlight(str, { language: lang }).value;
-      } catch (err) {
-        console.error(`Syntax highlighting failed for language ${lang}:`, err);
-        return str;
-      }
-    }
-    return str;
-  },
 }).use(markdownItAnchor, {
   permalink: markdownItAnchor.permalink.headerLink(),
   slugify: (s) =>
@@ -272,8 +266,8 @@ app.use((req, res, next) => {
 // Helper: serve static files (images, etc.)
 async function serveStaticFile(filePath, res) {
   const data = await fs.readFile(filePath);
-  const mimeModule = await import("mime");
-  const mimeType = mimeModule.default.getType(filePath);
+  const mime = await mimePromise;
+  const mimeType = mime.getType(filePath);
   if (!mimeType) {
     throw Object.assign(
       new Error(`Unable to determine MIME type for: ${filePath}`),
@@ -305,12 +299,22 @@ app.get(
   }),
 );
 
-// Serve profile image
+// Serve profile image (cached in memory)
 app.get(
   "/profile-pic",
   asyncHandler(async (req, res) => {
     if (!IMAGE) return res.status(404).send("Image not found");
-    await serveStaticFile(IMAGE, res);
+    if (!profileImageCache) {
+      const data = await fs.readFile(IMAGE);
+      const mime = await mimePromise;
+      profileImageCache = {
+        data,
+        mimeType: mime.getType(IMAGE) || "image/png",
+      };
+    }
+    res.setHeader("Content-Type", profileImageCache.mimeType);
+    res.setHeader("Cache-Control", "public, max-age=3600");
+    res.send(profileImageCache.data);
   }),
 );
 
@@ -322,8 +326,8 @@ app.get(
     if (!IMAGE) return res.status(404).send("Favicon not found");
     if (!faviconSvgCache) {
       const data = await fs.readFile(IMAGE);
-      const mimeModule = await import("mime");
-      const mimeType = mimeModule.default.getType(IMAGE) || "image/png";
+      const mime = await mimePromise;
+      const mimeType = mime.getType(IMAGE) || "image/png";
       const base64 = data.toString("base64");
       faviconSvgCache = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
 <defs><clipPath id="c"><circle cx="50" cy="50" r="50"/></clipPath></defs>
@@ -388,11 +392,7 @@ app.get(
         return res.send(outputContent);
       }
       res.render("index", {
-        folderStructure: await generateFolderStructure(
-          CONTENTS_DIR,
-          true,
-          `/content/${relativePath}`,
-        ),
+        folderStructure: await generateFolderStructure(CONTENTS_DIR),
         initialContent: outputContent,
         name: NAME,
         image: IMAGE,
@@ -439,7 +439,7 @@ async function generateRSSFeed() {
     async function processMarkdownFile(filePath, fileName) {
       try {
         const rawData = await fs.readFile(filePath, "utf8");
-        const { metadata } = await parseFileContent(rawData, filePath);
+        const metadata = parseMetadataOnly(rawData);
         const title = fileName
           .replace(/\..+$/, "")
           .split("-")
@@ -448,6 +448,10 @@ async function generateRSSFeed() {
         const relativePath = path
           .relative(CONTENTS_DIR, filePath)
           .split(path.sep)
+          .join("/");
+        const encodedPath = relativePath
+          .split("/")
+          .map(encodeURIComponent)
           .join("/");
         const categoryArr = path
           .dirname(relativePath)
@@ -458,9 +462,9 @@ async function generateRSSFeed() {
           title,
           description:
             metadata.description || "A new content piece is available.",
-          url: `http://${HOST}:${PORT}/content/${encodeURIComponent(relativePath)}`,
+          url: `http://${HOST}:${PORT}/content/${encodedPath}`,
           date: metadata.date || new Date().toISOString(),
-          guid: `http://${HOST}:${PORT}/content/${encodeURIComponent(relativePath)}`,
+          guid: `http://${HOST}:${PORT}/content/${encodedPath}`,
           categories: category ? [category] : [],
         });
       } catch (error) {
@@ -488,17 +492,20 @@ async function generateRSSFeed() {
   }
 }
 
-// RSS feed route
+// RSS feed route (server-side cached, invalidated by fs.watch)
 app.get(
   "/rss.xml",
   asyncHandler(async (req, res) => {
     try {
-      const rss = await generateRSSFeed();
+      if (!rssFeedCache) {
+        rssFeedCache = await generateRSSFeed();
+      }
       res.header("Content-Type", "application/rss+xml");
-      res.header("Cache-Control", "public, max-age=300"); // 5 min cache
-      res.send(rss);
+      res.header("Cache-Control", "public, max-age=300");
+      res.send(rssFeedCache);
     } catch (error) {
       console.error("RSS route error:", error);
+      rssFeedCache = null;
       res.status(500).send("RSS feed temporarily unavailable");
     }
   }),
@@ -535,7 +542,12 @@ async function handleError(res, err) {
     message = ERROR_MESSAGES.GENERIC_ERROR;
   }
   const markdownError = md.render(message);
-  const folderStructure = await generateFolderStructure(CONTENTS_DIR);
+  let folderStructure = "<ul></ul>";
+  try {
+    folderStructure = await generateFolderStructure(CONTENTS_DIR);
+  } catch (e) {
+    console.error("Failed to generate folder structure for error page:", e);
+  }
   res.status(statusCode).render("index", {
     folderStructure,
     initialContent: markdownError,
@@ -548,6 +560,16 @@ async function handleError(res, err) {
 }
 
 // --- Markdown Utilities ---
+// Extract only YAML frontmatter metadata without rendering markdown
+function parseMetadataOnly(data) {
+  const fmMatch = data.match(/^---\n([\s\S]*?)\n---/);
+  if (fmMatch) {
+    const frontMatter = yaml.load(fmMatch[1]) || {};
+    return { date: frontMatter.date, description: frontMatter.description };
+  }
+  return {};
+}
+
 async function parseFileContent(data, filePath) {
   const fmMatch = data.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
   if (fmMatch) {
@@ -568,10 +590,9 @@ function metadataToHtml(meta) {
     : "";
 }
 
-async function generateFolderStructure(dir, isRoot = true, currentPath = null) {
-  const cacheKey = `${dir}:${currentPath || ""}`;
-  if (isRoot && folderStructureCache.has(cacheKey)) {
-    return folderStructureCache.get(cacheKey);
+async function generateFolderStructure(dir, isRoot = true) {
+  if (isRoot && folderStructureCache.has(dir)) {
+    return folderStructureCache.get(dir);
   }
 
   const items = await fs.readdir(dir, { withFileTypes: true });
@@ -604,11 +625,7 @@ async function generateFolderStructure(dir, isRoot = true, currentPath = null) {
     const fullPath = path.join(dir, item.name);
     if (item.isDirectory()) {
       if (!(await isDirectoryValid(fullPath))) continue;
-      const content = await generateFolderStructure(
-        fullPath,
-        false,
-        currentPath,
-      );
+      const content = await generateFolderStructure(fullPath, false);
       if (!content.trim() || content.trim() === "<ul></ul>") continue;
       detailedItems.push({
         name: item.name,
@@ -618,7 +635,7 @@ async function generateFolderStructure(dir, isRoot = true, currentPath = null) {
       });
     } else if (MD_EXTENSIONS.includes(path.extname(item.name).toLowerCase())) {
       const fileContent = await fs.readFile(fullPath, "utf8");
-      const { metadata } = await parseFileContent(fileContent, fullPath);
+      const metadata = parseMetadataOnly(fileContent);
       detailedItems.push({
         name: item.name,
         path: fullPath,
@@ -666,17 +683,14 @@ async function generateFolderStructure(dir, isRoot = true, currentPath = null) {
       const dateDisplay = item.date
         ? `<div class="file-date">${escapeHtml(item.date)}</div>`
         : "";
-      const isActive = currentPath && `/content/${relPath}` === currentPath;
-      const activeClass = isActive ? ' class="active"' : "";
 
       if (itemName.toLowerCase() === "home") {
-        // Home should be styled like a folder but be a direct link
         structure.push(
-          `<li class="folder${activeClass ? " active" : ""}"><a href="/content/${relPath}">${icon} ${itemName}</a></li>`,
+          `<li class="folder"><a href="/content/${relPath}">${icon} ${itemName}</a></li>`,
         );
       } else {
         structure.push(
-          `<li${activeClass}><a href="/content/${relPath}">${icon} ${itemName}</a>${dateDisplay}</li>`,
+          `<li><a href="/content/${relPath}">${icon} ${itemName}</a>${dateDisplay}</li>`,
         );
       }
     }
@@ -684,7 +698,7 @@ async function generateFolderStructure(dir, isRoot = true, currentPath = null) {
   structure.push("</ul>");
   const result = structure.join("");
   if (isRoot) {
-    folderStructureCache.set(cacheKey, result);
+    folderStructureCache.set(dir, result);
   }
   return result;
 }

@@ -23,18 +23,16 @@
 
 /* Scrollable Content Container */
 .sidebar-content {
-  padding: 20px 20px 20px 20px;
+  padding: 20px;
   padding-top: 75px;
   overflow-y: scroll;
   flex-grow: 1;
   height: calc(100vh - 75px);
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 .sidebar-content::-webkit-scrollbar {
   display: none;
-}
-.sidebar-content {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
 }
 
 /* Sidebar Image Container */

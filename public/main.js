@@ -7,7 +7,19 @@ const CONFIG = {
   DEFAULT_THEME: "dark",
 };
 
+// Shared DOM element references
+const el = {};
+
 document.addEventListener("DOMContentLoaded", () => {
+  el.sidebar = document.querySelector(".sidebar");
+  el.container = document.querySelector(".container");
+  el.collapseBtn = document.getElementById("collapseSidebar");
+  el.backdrop = document.getElementById("sidebarBackdrop");
+  el.themeToggle = document.getElementById("themeToggleIcon");
+  el.hljsLight = document.getElementById("highlightjs-light");
+  el.hljsDark = document.getElementById("highlightjs-dark");
+  el.main = document.querySelector(".main");
+
   setupThemeToggle();
   setupSidebarToggle();
   setupSwipeGestures();
@@ -16,18 +28,22 @@ document.addEventListener("DOMContentLoaded", () => {
   setupFolderToggles();
   setupKeyboardNavigation();
   setupRssCopyLink();
+  setupActiveLink();
 });
 
+function isMobile() {
+  return window.innerWidth <= CONFIG.MOBILE_BREAKPOINT;
+}
+
 function setupThemeToggle() {
-  const themeToggleIcon = document.getElementById("themeToggleIcon");
   const toggleTheme = () => {
     const isDarkTheme = document.body.classList.toggle("dark-theme");
     localStorage.setItem("theme", isDarkTheme ? "dark" : "light");
-    document.getElementById("highlightjs-light").disabled = isDarkTheme;
-    document.getElementById("highlightjs-dark").disabled = !isDarkTheme;
+    el.hljsLight.disabled = isDarkTheme;
+    el.hljsDark.disabled = !isDarkTheme;
   };
 
-  themeToggleIcon.addEventListener("click", (e) => {
+  el.themeToggle.addEventListener("click", (e) => {
     e.preventDefault();
     toggleTheme();
   });
@@ -43,33 +59,27 @@ function setupThemeToggle() {
     document.body.classList.remove("dark-theme");
   }
 
-  document.getElementById("highlightjs-light").disabled = isDark;
-  document.getElementById("highlightjs-dark").disabled = !isDark;
+  el.hljsLight.disabled = isDark;
+  el.hljsDark.disabled = !isDark;
 }
 
 function setupSidebarToggle() {
-  const collapseBtn = document.getElementById("collapseSidebar");
-  const sidebar = document.querySelector(".sidebar");
-  const container = document.querySelector(".container");
-  const backdrop = document.getElementById("sidebarBackdrop");
-  const isMobile = () => window.innerWidth <= CONFIG.MOBILE_BREAKPOINT;
-
   const toggleSidebar = () => {
-    const isCollapsed = sidebar.classList.toggle("collapsed");
+    const isCollapsed = el.sidebar.classList.toggle("collapsed");
 
     if (isMobile()) {
-      backdrop.classList.toggle("active", !isCollapsed);
+      el.backdrop.classList.toggle("active", !isCollapsed);
       document.body.classList.toggle("no-scroll", !isCollapsed);
     } else {
-      container.classList.toggle("sidebar-collapsed", isCollapsed);
+      el.container.classList.toggle("sidebar-collapsed", isCollapsed);
     }
 
-    collapseBtn.classList.toggle("rotate", isCollapsed);
+    el.collapseBtn.classList.toggle("rotate", isCollapsed);
   };
 
-  collapseBtn.addEventListener("click", toggleSidebar);
-  backdrop.addEventListener("click", () => {
-    if (!sidebar.classList.contains("collapsed")) {
+  el.collapseBtn.addEventListener("click", toggleSidebar);
+  el.backdrop.addEventListener("click", () => {
+    if (!el.sidebar.classList.contains("collapsed")) {
       toggleSidebar();
     }
   });
@@ -84,52 +94,42 @@ function setupSwipeGestures() {
   document.body.addEventListener("touchend", (e) => {
     const touchEndX = e.changedTouches[0].screenX;
     const threshold = CONFIG.SWIPE_THRESHOLD;
-    const sidebar = document.querySelector(".sidebar");
-    const container = document.querySelector(".container");
-    const collapseBtn = document.getElementById("collapseSidebar");
 
     if (
       touchEndX > touchStartX + threshold &&
-      sidebar.classList.contains("collapsed")
+      el.sidebar.classList.contains("collapsed")
     ) {
-      sidebar.classList.remove("collapsed");
-      container.classList.remove("sidebar-collapsed");
-      collapseBtn.classList.remove("rotate");
+      el.sidebar.classList.remove("collapsed");
+      el.container.classList.remove("sidebar-collapsed");
+      el.collapseBtn.classList.remove("rotate");
     } else if (
       touchEndX < touchStartX - threshold &&
-      !sidebar.classList.contains("collapsed")
+      !el.sidebar.classList.contains("collapsed")
     ) {
-      sidebar.classList.add("collapsed");
-      container.classList.add("sidebar-collapsed");
-      collapseBtn.classList.add("rotate");
+      el.sidebar.classList.add("collapsed");
+      el.container.classList.add("sidebar-collapsed");
+      el.collapseBtn.classList.add("rotate");
     }
   });
 }
 
 function setupInitialSidebarState() {
-  const sidebar = document.querySelector(".sidebar");
-  const container = document.querySelector(".container");
-  const collapseBtn = document.getElementById("collapseSidebar");
-  const isMobile = () => window.innerWidth <= CONFIG.MOBILE_BREAKPOINT;
-
-  sidebar.classList.add("no-transition");
-  container.classList.add("no-transition");
+  el.sidebar.classList.add("no-transition");
+  el.container.classList.add("no-transition");
 
   if (isMobile()) {
-    // On mobile, start with sidebar collapsed
-    sidebar.classList.add("collapsed");
-    collapseBtn.classList.add("rotate");
-    // Ensure main content is positioned correctly
-    container.classList.add("sidebar-collapsed");
+    el.sidebar.classList.add("collapsed");
+    el.collapseBtn.classList.add("rotate");
+    el.container.classList.add("sidebar-collapsed");
   } else {
-    sidebar.classList.remove("collapsed");
-    container.classList.remove("sidebar-collapsed");
-    collapseBtn.classList.remove("rotate");
+    el.sidebar.classList.remove("collapsed");
+    el.container.classList.remove("sidebar-collapsed");
+    el.collapseBtn.classList.remove("rotate");
   }
 
   setTimeout(() => {
-    sidebar.classList.remove("no-transition");
-    container.classList.remove("no-transition");
+    el.sidebar.classList.remove("no-transition");
+    el.container.classList.remove("no-transition");
   }, CONFIG.TRANSITION_DELAY);
 }
 
@@ -157,8 +157,7 @@ function addCopyButtons() {
 }
 
 function setupFolderToggles() {
-  const sidebar = document.querySelector(".sidebar");
-  sidebar.classList.add("no-transition");
+  el.sidebar.classList.add("no-transition");
 
   document
     .querySelectorAll(".sidebar .folder > span")
@@ -185,38 +184,33 @@ function setupFolderToggles() {
     });
 
   setTimeout(
-    () => sidebar.classList.remove("no-transition"),
+    () => el.sidebar.classList.remove("no-transition"),
     CONFIG.TRANSITION_DELAY,
   );
 }
 
 function setupKeyboardNavigation() {
   document.addEventListener("keydown", (e) => {
-    // Ignore if user is typing in an input
     if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
 
     switch (e.key) {
       case "t":
       case "T":
         e.preventDefault();
-        document.getElementById("themeToggleIcon").click();
+        el.themeToggle.click();
         break;
       case "Escape":
-        const sidebar = document.querySelector(".sidebar");
-        if (!sidebar.classList.contains("collapsed")) {
-          document.getElementById("collapseSidebar").click();
+        if (!el.sidebar.classList.contains("collapsed")) {
+          el.collapseBtn.click();
         }
         break;
       case "Home":
         e.preventDefault();
-        document
-          .querySelector(".main")
-          .scrollTo({ top: 0, behavior: "smooth" });
+        el.main.scrollTo({ top: 0, behavior: "smooth" });
         break;
       case "End":
         e.preventDefault();
-        const main = document.querySelector(".main");
-        main.scrollTo({ top: main.scrollHeight, behavior: "smooth" });
+        el.main.scrollTo({ top: el.main.scrollHeight, behavior: "smooth" });
         break;
     }
   });
@@ -238,5 +232,14 @@ function setupRssCopyLink() {
         icon.classList.add("fa-rss");
       }, CONFIG.COPY_BUTTON_RESET_DELAY);
     });
+  });
+}
+
+function setupActiveLink() {
+  const currentPath = window.location.pathname;
+  document.querySelectorAll('.sidebar a[href^="/content/"]').forEach((link) => {
+    if (link.getAttribute("href") === currentPath) {
+      link.closest("li").classList.add("active");
+    }
   });
 }
