@@ -62,16 +62,16 @@
 
           # Packages, accessible through 'nix build', 'nix run', etc
           packages = {
-            coditon-blog = pkgs.callPackage ./package.nix { };
-            default = self'.packages.coditon-blog;
+            molesk = pkgs.callPackage ./package.nix { };
+            default = self'.packages.molesk;
           };
         };
 
       flake = {
         # NixOS modules
         nixosModules = {
-          coditon-blog = import ./module.nix;
-          default = self.nixosModules.coditon-blog;
+          molesk = import ./module.nix;
+          default = self.nixosModules.molesk;
         };
       };
     };

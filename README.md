@@ -1,4 +1,4 @@
-# coditon-md
+# molesk
 
 > **Written by a JavaScript beginner relying heavily on AI**
 
@@ -24,20 +24,20 @@ For NixOS users, this can be seamlessly integrated as a module:
 ```nix
 {
   inputs = {
-    coditon-md.url = "github:tupakkatapa/coditon-md";
+    molesk.url = "github:tupakkatapa/molesk";
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
   };
 
-  outputs = { self, nixpkgs, coditon-md }: {
+  outputs = { self, nixpkgs, molesk }: {
     nixosConfigurations = {
       yourhostname = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         modules = [
           ./configuration.nix
-          coditon-md.nixosModules.default
+          molesk.nixosModules.default
           # Module Configuration
           {
-            services.coditon-md = { ... };
+            services.molesk = { ... };
           }
         ];
       };
@@ -50,22 +50,22 @@ For NixOS users, this can be seamlessly integrated as a module:
 
 ### Options
 
-- **`enable`** -- Enables the coditon-md service.
-- **`dataDir`** -- Directory where markdown files are located (default: `/var/lib/coditon-md`).
+- **`enable`** -- Enables the molesk service.
+- **`dataDir`** -- Directory where markdown files are located (default: `/var/lib/molesk`).
 - **`address`** -- Host address for the service (default: `0.0.0.0`).
 - **`port`** -- Port number for the service (default: `8080`).
-- **`name`** -- Name displayed on the site (default: `Mike Wazowski`).
+- **`name`** -- Name displayed on the site (default: `Molesk`).
 - **`image`** -- Path to the profile picture.
 - **`links`** -- Social media links, each with a `fab` (FontAwesome icon class) and `url`.
-- **`sourceLink`** -- Source code link displayed in the interface (default: `https://github.com/tupakkatapa/coditon-md`).
+- **`sourceLink`** -- Source code link displayed in the interface (default: `https://github.com/tupakkatapa/molesk`).
 - **`openFirewall`** -- Open ports in the firewall for the web interface (default: `false`).
-- **`user`** / **`group`** -- User and group under which the service runs (default: `coditon`).
+- **`user`** / **`group`** -- User and group under which the service runs (default: `molesk`).
 
 ### Example
 
 ```nix
 {
-  services.coditon-md = {
+  services.molesk = {
     enable = true;
     name = "Your Name";
     dataDir = "/path/to/content";
@@ -109,7 +109,7 @@ date: "2024-03-30"
 Can also be run directly without the NixOS module:
 
 ```shell
-nix run github:tupakkatapa/coditon-md -- [options]
+nix run github:tupakkatapa/molesk -- [options]
 ```
 
 ```
@@ -121,7 +121,7 @@ Options:
   -d, --datadir       Set the data directory for contents (default: './contents')
   -a, --address       Set the host address (default: '0.0.0.0')
   -p, --port          Set the port number (default: 8080)
-  -n, --name          Set the name displayed on the site (default: 'My Site')
+  -n, --name          Set the name displayed on the site (default: 'Molesk')
   -i, --image         Set the path to the profile picture
   -l, --link          Add link with icon and URL in the format 'icon:url'
                       (e.g., --link fa-github:https://github.com/username)

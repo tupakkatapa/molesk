@@ -1,6 +1,6 @@
 { pkgs }:
 pkgs.mkYarnPackage {
-  name = "coditon-md";
+  name = "molesk";
   version = "0.1.0";
 
   src = ./.;

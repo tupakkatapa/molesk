@@ -50,10 +50,10 @@ const ERROR_MESSAGES = {
 let PORT = 8080;
 let HOST = "0.0.0.0";
 let CONTENTS_DIR = path.join(__dirname, "contents");
-let NAME = "My Site";
+let NAME = "Molesk";
 let IMAGE = "";
 const SOCIAL_LINKS = [];
-let SOURCE_LINK = "https://github.com/tupakkatapa/coditon-md";
+let SOURCE_LINK = "https://github.com/tupakkatapa/molesk";
 
 // --- Helpers ---
 // Simple string capitalize
@@ -145,7 +145,7 @@ Options:
   -d, --datadir       Set the data directory for contents (default: './contents')
   -a, --address       Set the host address (default: '0.0.0.0')
   -p, --port          Set the port number (default: 8080)
-  -n, --name          Set the name displayed on the site (default: 'My Site')
+  -n, --name          Set the name displayed on the site (default: 'Molesk')
   -i, --image         Set the path to the profile picture
   -l, --link          Add link with icon and URL in the format 'icon:url'
                       (e.g., --link fa-github:https://github.com/username)

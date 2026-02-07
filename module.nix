@@ -4,16 +4,16 @@
 , ...
 }:
 with lib; let
-  cfg = config.services.coditon-md;
-  coditon-md = pkgs.callPackage ./package.nix { };
+  cfg = config.services.molesk;
+  molesk = pkgs.callPackage ./package.nix { };
 in
 {
-  options.services.coditon-md = {
-    enable = mkEnableOption "Whether to enable coditon-md";
+  options.services.molesk = {
+    enable = mkEnableOption "Whether to enable molesk";
 
     dataDir = mkOption {
       type = types.str;
-      default = "/var/lib/coditon-md";
+      default = "/var/lib/molesk";
       description = "The directory where the markdown files are located.";
     };
 
@@ -31,7 +31,7 @@ in
 
     name = mkOption {
       type = types.str;
-      default = "Mike Wazowski";
+      default = "Molesk";
       description = "The name to be displayed on the site.";
     };
 
@@ -60,7 +60,7 @@ in
 
     sourceLink = mkOption {
       type = types.str;
-      default = "https://github.com/tupakkatapa/coditon-md";
+      default = "https://github.com/tupakkatapa/molesk";
       description = "Source code link displayed in the interface.";
     };
 
@@ -72,7 +72,7 @@ in
 
     user = mkOption {
       type = types.str;
-      default = "coditon";
+      default = "molesk";
       description = "User account under which service runs.";
     };
 
@@ -88,7 +88,7 @@ in
       "d ${cfg.dataDir} 0700 ${cfg.user} ${cfg.group} - -"
     ];
 
-    systemd.services.coditon-md = {
+    systemd.services.molesk = {
       after = [ "network.target" ];
       wantedBy = [ "multi-user.target" ];
       serviceConfig = {
@@ -106,7 +106,7 @@ in
       };
       script =
         ''
-          ${coditon-md}/bin/coditon-md \
+          ${molesk}/bin/molesk \
           --datadir ${escapeShellArg cfg.dataDir} \
           --port ${toString cfg.port} \
           --address ${escapeShellArg cfg.address} \
@@ -121,16 +121,16 @@ in
       allowedTCPPorts = [ cfg.port ];
     };
 
-    users.users = mkIf (cfg.user == "coditon") {
-      "coditon" = {
+    users.users = mkIf (cfg.user == "molesk") {
+      "molesk" = {
         isSystemUser = true;
         group = cfg.group;
         home = cfg.dataDir;
       };
     };
 
-    users.groups = mkIf (cfg.group == "coditon") {
-      "coditon" = { };
+    users.groups = mkIf (cfg.group == "molesk") {
+      "molesk" = { };
     };
   };
 }
