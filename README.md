@@ -1,6 +1,6 @@
-# Coditon-MD
+# coditon-md
 
-> ⚠️ **Written by a JavaScript beginner relying heavily on AI**
+> **Written by a JavaScript beginner relying heavily on AI**
 
 Simple yet customizable, self-hosted platform designed to dynamically render Markdown files as HTML content from a specified directory.
 
@@ -15,6 +15,7 @@ My own instance is up and running at: [https://blog.coditon.com](https://blog.co
 - Supports both dark and light themes for user preference
 - Fully responsive layout that looks great on both desktop and mobile devices
 - Provides an RSS feed and article downloads
+- Keyboard shortcuts for navigation
 
 ## Getting Started
 
@@ -33,19 +34,10 @@ For NixOS users, this can be seamlessly integrated as a module:
         system = "x86_64-linux";
         modules = [
           ./configuration.nix
-          coditon-md.nixosModules.coditon-md
+          coditon-md.nixosModules.default
+          # Module Configuration
           {
-            coditon-md = {
-              enable = true;
-              name = "Your Name";
-              dataDir = "/path/to/content";
-              image = "/path/to/image.jpg";
-              links = [
-                { fab = "fa-github"; url = "https://github.com/yourusername"; },
-                { fab = "fa-x-twitter"; url = "https://x.com/yourusername"; },
-                # Add more social links as needed
-              ];
-            };
+            services.coditon-md = { ... };
           }
         ];
       };
@@ -54,59 +46,93 @@ For NixOS users, this can be seamlessly integrated as a module:
 }
 ```
 
-Or with Nix run:
+## Module Configuration
 
-```shell
-nix run github:tupakkatapa/coditon-md# -- \
-  --name "Your Name" \
-  --datadir "/path/to/content" \
-  --image "/path/to/image.jpg" \
-  --link "fa-github:https://github.com/yourusername" \
-  --link "fa-x-twitter:https://x.com/yourusername"
-```
+### Options
 
-Or using Node.js:
+- **`enable`** -- Enables the coditon-md service.
+- **`dataDir`** -- Directory where markdown files are located (default: `/var/lib/coditon-md`).
+- **`address`** -- Host address for the service (default: `0.0.0.0`).
+- **`port`** -- Port number for the service (default: `8080`).
+- **`name`** -- Name displayed on the site (default: `Mike Wazowski`).
+- **`image`** -- Path to the profile picture.
+- **`links`** -- Social media links, each with a `fab` (FontAwesome icon class) and `url`.
+- **`sourceLink`** -- Source code link displayed in the interface (default: `https://github.com/tupakkatapa/coditon-md`).
+- **`openFirewall`** -- Open ports in the firewall for the web interface (default: `false`).
+- **`user`** / **`group`** -- User and group under which the service runs (default: `coditon`).
 
-```shell
-node app.js \
-  --name "Your Name" \
-  --datadir "/path/to/content" \
-  --image "/path/to/image.jpg" \
-  --link "fa-github:https://github.com/yourusername" \
-  --link "fa-x-twitter:https://x.com/yourusername"
+### Example
+
+```nix
+{
+  services.coditon-md = {
+    enable = true;
+    name = "Your Name";
+    dataDir = "/path/to/content";
+    image = "/path/to/image.jpg";
+    links = [
+      { fab = "fa-github"; url = "https://github.com/yourusername"; }
+      { fab = "fa-x-twitter"; url = "https://x.com/yourusername"; }
+    ];
+  };
+}
 ```
 
 ## Usage
 
-1. **Create Markdown Files**:
-   Place your Markdown (`.md`) files in the specified `dataDir`. Each file represents a post or page.
+Place your Markdown (`.md`) files in the configured data directory. Each file becomes a page, and the alphabetically first file serves as the index page.
 
-   The index page is automatically the alphabetically first supported file in the data directory.
+```
+dataDir/
+├── Home.md
+├── image.jpg
+├── assets
+│   └── treasure_map.jpg
+├── posts
+│   ├── 'Desert Treasure.md'
+│   └── 'The Fremennik Trials.md'
+└── recipes
+    ├── 'Pineapple Pizza.md'
+    └── 'Gnome Cocktail.md'
+```
 
-   Example `dataDir` structure:
+Optionally, include YAML frontmatter to specify the publication date:
 
-   ```
-   .
-   ├── Home.md
-   ├── image.jpg
-   ├── assets
-   │   └── treasure_map.jpg
-   ├── posts
-   │   ├── 'Desert Treasure.md'
-   │   └── 'The Fremennik Trials.md'
-   └── recipes
-       ├── 'Pineapple Pizza.md'
-       └── 'Gnome Cocktail.md'
-   ```
+```yaml
+---
+date: "2024-03-30"
+---
+```
 
-2. **Metadata Configuration**:
-   Optionally, include YAML metadata at the beginning of your Markdown files to specify the publication date. For example:
+### CLI Options
 
-   ```yaml
-   ---
-   date: "2024-03-30"
-   ---
-   ```
+Can also be run directly without the NixOS module:
 
-3. **Viewing Your Site**:
-   Once you get this up and running, visit `http://localhost:8080` (or your configured address) in your browser.
+```shell
+nix run github:tupakkatapa/coditon-md -- [options]
+```
+
+```
+$ node app.js --help
+Usage: node [script] [options]
+
+Options:
+  -h, --help          Display this help information
+  -d, --datadir       Set the data directory for contents (default: './contents')
+  -a, --address       Set the host address (default: '0.0.0.0')
+  -p, --port          Set the port number (default: 8080)
+  -n, --name          Set the name displayed on the site (default: 'My Site')
+  -i, --image         Set the path to the profile picture
+  -l, --link          Add link with icon and URL in the format 'icon:url'
+                      (e.g., --link fa-github:https://github.com/username)
+  -s, --source        Set the source code repository URL
+```
+
+### Keyboard Shortcuts
+
+| Key      | Action                  |
+| -------- | ----------------------- |
+| `t`      | Toggle dark/light theme |
+| `Escape` | Close sidebar           |
+| `Home`   | Scroll to top           |
+| `End`    | Scroll to bottom        |
