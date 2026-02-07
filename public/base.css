@@ -9,6 +9,10 @@ body {
   padding: 0;
 }
 
+body.no-scroll {
+  overflow: hidden;
+}
+
 /* Respect user motion preferences */
 @media (prefers-reduced-motion: reduce) {
   *,

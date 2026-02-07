@@ -8,7 +8,7 @@ test.describe("Content Loading & Navigation", () => {
     await expect(page).toHaveURL(/\/content\/.+/);
 
     // Should have the site title
-    await expect(page).toHaveTitle(/.*Home.*|.*My Site.*/);
+    await expect(page).toHaveTitle(/.*Home.* - .*/);
 
     // Content should be loaded
     const content = page.locator("#file-content");

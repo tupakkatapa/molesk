@@ -59,14 +59,12 @@ function setupSidebarToggle() {
 
     if (isMobile()) {
       backdrop.classList.toggle("active", !isCollapsed);
-      document.body.style.overflow = isCollapsed ? "auto" : "hidden";
+      document.body.classList.toggle("no-scroll", !isCollapsed);
     } else {
       container.classList.toggle("sidebar-collapsed", isCollapsed);
     }
 
-    collapseBtn.style.transform = isCollapsed
-      ? "rotate(180deg)"
-      : "rotate(0deg)";
+    collapseBtn.classList.toggle("rotate", isCollapsed);
   };
 
   collapseBtn.addEventListener("click", toggleSidebar);
@@ -96,14 +94,14 @@ function setupSwipeGestures() {
     ) {
       sidebar.classList.remove("collapsed");
       container.classList.remove("sidebar-collapsed");
-      collapseBtn.style.transform = "rotate(0deg)";
+      collapseBtn.classList.remove("rotate");
     } else if (
       touchEndX < touchStartX - threshold &&
       !sidebar.classList.contains("collapsed")
     ) {
       sidebar.classList.add("collapsed");
       container.classList.add("sidebar-collapsed");
-      collapseBtn.style.transform = "rotate(180deg)";
+      collapseBtn.classList.add("rotate");
     }
   });
 }
@@ -120,13 +118,13 @@ function setupInitialSidebarState() {
   if (isMobile()) {
     // On mobile, start with sidebar collapsed
     sidebar.classList.add("collapsed");
-    collapseBtn.style.transform = "rotate(180deg)";
+    collapseBtn.classList.add("rotate");
     // Ensure main content is positioned correctly
     container.classList.add("sidebar-collapsed");
   } else {
     sidebar.classList.remove("collapsed");
     container.classList.remove("sidebar-collapsed");
-    collapseBtn.style.transform = "rotate(0deg)";
+    collapseBtn.classList.remove("rotate");
   }
 
   setTimeout(() => {

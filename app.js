@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 const express = require("express");
 const compression = require("compression");
+const rateLimit = require("express-rate-limit");
 const MarkdownIt = require("markdown-it");
 const markdownItAnchor = require("markdown-it-anchor");
 const hljs = require("highlight.js");
@@ -165,9 +166,21 @@ try {
 
 // --- Express App Setup ---
 const app = express();
+app.disable("x-powered-by");
 
 // Compression middleware (gzip)
 app.use(compression());
+
+// Rate limiting (skipped for localhost to allow testing)
+app.use(
+  rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 300,
+    standardHeaders: true,
+    legacyHeaders: false,
+    skip: (req) => req.ip === "127.0.0.1" || req.ip === "::1",
+  }),
+);
 
 // Security: CSP and other security headers
 app.use((req, res, next) => {
@@ -175,6 +188,7 @@ app.use((req, res, next) => {
     "Content-Security-Policy",
     "default-src 'self'; " +
       "script-src 'self' https://cdnjs.cloudflare.com; " +
+      // unsafe-inline required for dynamic folder maxHeight animation
       "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; " +
       "font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; " +
       "img-src 'self' data:; " +
@@ -183,6 +197,10 @@ app.use((req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("X-Frame-Options", "DENY");
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.setHeader(
+    "Permissions-Policy",
+    "camera=(), microphone=(), geolocation=()",
+  );
   next();
 });
 
@@ -296,22 +314,25 @@ app.get(
   }),
 );
 
-// Serve circular favicon from profile image
+// Serve circular favicon from profile image (cached in memory)
+let faviconSvgCache = null;
 app.get(
   "/favicon.svg",
   asyncHandler(async (req, res) => {
     if (!IMAGE) return res.status(404).send("Favicon not found");
-    const data = await fs.readFile(IMAGE);
-    const mimeModule = await import("mime");
-    const mimeType = mimeModule.default.getType(IMAGE) || "image/png";
-    const base64 = data.toString("base64");
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+    if (!faviconSvgCache) {
+      const data = await fs.readFile(IMAGE);
+      const mimeModule = await import("mime");
+      const mimeType = mimeModule.default.getType(IMAGE) || "image/png";
+      const base64 = data.toString("base64");
+      faviconSvgCache = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
 <defs><clipPath id="c"><circle cx="50" cy="50" r="50"/></clipPath></defs>
 <image href="data:${mimeType};base64,${base64}" width="100" height="100" clip-path="url(#c)" preserveAspectRatio="xMidYMid slice"/>
 </svg>`;
+    }
     res.setHeader("Content-Type", "image/svg+xml");
     res.setHeader("Cache-Control", "public, max-age=3600");
-    res.send(svg);
+    res.send(faviconSvgCache);
   }),
 );
 
@@ -357,9 +378,10 @@ app.get(
       const { content, metadata } = await parseFileContent(rawData, filePath);
       const outputContent = metadataToHtml(metadata) + content;
       const relativePath = path.relative(CONTENTS_DIR, filePath);
-      const title = capitalize(
-        path.basename(filePath, ext).replace(/[-_]/g, " "),
-      );
+      const title =
+        capitalize(path.basename(filePath, ext).replace(/[-_]/g, " ")) +
+        " - " +
+        NAME;
 
       if (req.isAjaxRequest) {
         res.setHeader("Content-Type", "text/html");
@@ -501,13 +523,13 @@ async function handleError(res, err) {
   let statusCode = err.status || 500;
   let message;
   if (statusCode === 404 || err.code === "ENOENT") {
-    statusCode = 200; // Soft 404: show error content but return 200 for SPA-like behavior
+    statusCode = 404;
     message = ERROR_MESSAGES.NOT_FOUND;
   } else if (
     err.message &&
     err.message.includes("Unsupported file extension")
   ) {
-    statusCode = 200; // Show error content but return 200 for SPA-like behavior
+    statusCode = 400;
     message = ERROR_MESSAGES.UNSUPPORTED_FILE;
   } else {
     message = ERROR_MESSAGES.GENERIC_ERROR;
@@ -521,7 +543,7 @@ async function handleError(res, err) {
     image: IMAGE,
     socialLinks: SOCIAL_LINKS,
     sourceLink: SOURCE_LINK,
-    title: statusCode.toString(),
+    title: statusCode.toString() + " - " + NAME,
   });
 }
 
@@ -635,9 +657,11 @@ async function generateFolderStructure(dir, isRoot = true, currentPath = null) {
         itemName.toLowerCase() === "home"
           ? '<i class="fas fa-home"></i>'
           : '<i class="fas fa-file-alt"></i>';
-      const relPath = encodeURI(
-        path.relative(CONTENTS_DIR, item.path).split(path.sep).join("/"),
-      );
+      const relPath = path
+        .relative(CONTENTS_DIR, item.path)
+        .split(path.sep)
+        .map(encodeURIComponent)
+        .join("/");
       // Security: Escape date to prevent XSS
       const dateDisplay = item.date
         ? `<div class="file-date">${escapeHtml(item.date)}</div>`

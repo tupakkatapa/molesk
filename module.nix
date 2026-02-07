@@ -96,18 +96,25 @@ in
         User = cfg.user;
         Group = cfg.group;
         Restart = "on-failure";
+
+        # Hardening
+        NoNewPrivileges = true;
+        ProtectSystem = "strict";
+        ProtectHome = true;
+        PrivateTmp = true;
+        ReadWritePaths = [ cfg.dataDir ];
       };
       script =
         ''
           ${coditon-md}/bin/coditon-md \
-          --datadir "${cfg.dataDir}" \
+          --datadir ${escapeShellArg cfg.dataDir} \
           --port ${toString cfg.port} \
-          --address "${cfg.address}" \
-          --name "${cfg.name}" \
-          --image "${cfg.image}" \
-          --source "${cfg.sourceLink}" \
+          --address ${escapeShellArg cfg.address} \
+          --name ${escapeShellArg cfg.name} \
+          --image ${escapeShellArg cfg.image} \
+          --source ${escapeShellArg cfg.sourceLink} \
         ''
-        + (concatStringsSep " " (map (item: "--link '${item.fab}:${item.url}'") cfg.links));
+        + (concatStringsSep " " (map (item: "--link ${escapeShellArg "${item.fab}:${item.url}"}") cfg.links));
     };
 
     networking.firewall = mkIf cfg.openFirewall {

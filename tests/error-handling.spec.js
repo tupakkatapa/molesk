@@ -5,8 +5,8 @@ test.describe("Error Handling", () => {
     // Go to non-existent page
     const response = await page.goto("/content/does-not-exist.md");
 
-    // Should return 200 (server handles routing)
-    expect(response.status()).toBe(200);
+    // Should return 404
+    expect(response.status()).toBe(404);
 
     // Should show error content
     const content = page.locator("#file-content");
@@ -21,7 +21,7 @@ test.describe("Error Handling", () => {
     // Try to access a file with unsupported extension (.json is not in MD_EXTENSIONS)
     const response = await page.goto("/content/test.json");
 
-    expect(response.status()).toBe(200);
+    expect(response.status()).toBe(400);
 
     const content = page.locator("#file-content");
     await expect(content).toBeVisible();
