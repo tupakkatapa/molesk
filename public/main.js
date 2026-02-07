@@ -20,15 +20,19 @@ document.addEventListener("DOMContentLoaded", () => {
   el.hljsDark = document.getElementById("highlightjs-dark");
   el.main = document.querySelector(".main");
 
+  const singleFileMode = document.body.classList.contains("single-file-mode");
+
   setupThemeToggle();
-  setupSidebarToggle();
-  setupSwipeGestures();
-  setupInitialSidebarState();
+  if (!singleFileMode) {
+    setupSidebarToggle();
+    setupSwipeGestures();
+    setupInitialSidebarState();
+    setupFolderToggles();
+    setupActiveLink();
+    setupRssCopyLink();
+  }
   addCopyButtons();
-  setupFolderToggles();
   setupKeyboardNavigation();
-  setupRssCopyLink();
-  setupActiveLink();
 });
 
 function isMobile() {
@@ -83,6 +87,16 @@ function setupSidebarToggle() {
       toggleSidebar();
     }
   });
+
+  // Mobile: clicking the collapsed sidebar sliver opens it
+  const toggleZone = document.getElementById("sidebarToggleZone");
+  if (toggleZone) {
+    toggleZone.addEventListener("click", () => {
+      if (isMobile() && el.sidebar.classList.contains("collapsed")) {
+        toggleSidebar();
+      }
+    });
+  }
 }
 
 function setupSwipeGestures() {
@@ -200,7 +214,11 @@ function setupKeyboardNavigation() {
         el.themeToggle.click();
         break;
       case "Escape":
-        if (!el.sidebar.classList.contains("collapsed")) {
+        if (
+          el.sidebar &&
+          el.collapseBtn &&
+          !el.sidebar.classList.contains("collapsed")
+        ) {
           el.collapseBtn.click();
         }
         break;

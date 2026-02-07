@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><%= title %></title>
+  <title><%= pageTitle %></title>
   <% if (image) { %>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="preload" href="/profile-pic" as="image">
@@ -23,10 +23,17 @@
   <link rel="stylesheet" id="highlightjs-light" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" disabled>
   <link rel="stylesheet" id="highlightjs-dark" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
 </head>
-<body class="dark-theme">
+<body class="dark-theme<%= typeof singleFile !== 'undefined' && singleFile ? ' single-file-mode' : '' %>">
   <div class="container">
+    <% if (typeof singleFile !== 'undefined' && singleFile) { %>
+    <button class="theme-toggle single-file-theme-toggle" id="themeToggleIcon" title="Toggle Theme" aria-label="Toggle between light and dark theme">
+      <i class="fa-solid fa-circle-half-stroke"></i>
+    </button>
+    <% } %>
+    <% if (typeof singleFile === 'undefined' || !singleFile) { %>
     <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
     <nav class="sidebar" role="navigation" aria-label="Site navigation">
+      <div class="sidebar-toggle-zone" id="sidebarToggleZone" role="button" aria-label="Open sidebar"></div>
       <div class="sidebar-content">
         <div class="image-container">
           <% if (image) { %>
@@ -34,7 +41,7 @@
           <% } %>
         </div>
         <div class="sidebar-header">
-          <p class="site-name">~ <%= name %></p>
+          <p class="site-name">~ <%= title %></p>
         </div>
         <div class="navigation-buttons">
           <%- folderStructure %>
@@ -45,15 +52,18 @@
         </button>
       </div>
     </nav>
+    <% } %>
     <main class="main" role="main">
       <div id="file-content" class="markdown-body">
         <%- initialContent %>
-        <% if (typeof relativePath !== 'undefined') { %>
+        <% if (typeof relativePath !== 'undefined' && (typeof showDownload === 'undefined' || showDownload)) { %>
           <a href="/download/<%= relativePath %>" class="download-icon" title="Download">
             <i class="fa-solid fa-download"></i>
           </a>
         <% } %>
       </div>
+      <% const hasFooterLinks = (socialLinks && socialLinks.length > 0) || sourceLink || (typeof showRss === 'undefined' || showRss); %>
+      <% if (hasFooterLinks) { %>
       <div class="social-links-bar">
         <% if (socialLinks && socialLinks.length > 0) { %>
           <% socialLinks.forEach(function(link) { %><a href="<%= link.href %>" class="social-link" aria-label="<%= link.fab.replace('fa-', '') %>"><i class="fab <%= link.fab %>"></i></a><% }); %>
@@ -61,9 +71,12 @@
         <% if (sourceLink) { %>
         <a href="<%= sourceLink %>" class="social-link" title="Source Code" aria-label="Source Code"><i class="fa-solid fa-code"></i></a>
         <% } %>
+        <% if (typeof showRss === 'undefined' || showRss) { %>
         <a href="#" class="social-link rss-copy-link" title="Copy RSS Feed Link" aria-label="Copy RSS Feed Link" data-rss-url="/rss.xml"><i class="fa-solid fa-rss"></i></a>
+        <% } %>
       </div>
-    </div>
+      <% } %>
+    </main>
   </div>
 
   <script src="/main.js"></script>

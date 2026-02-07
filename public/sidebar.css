@@ -247,3 +247,8 @@
 .sidebar .theme-toggle:hover {
   color: #3b3428;
 }
+
+/* Toggle zone - hidden on desktop */
+.sidebar-toggle-zone {
+  display: none;
+}

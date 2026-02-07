@@ -34,7 +34,7 @@ module.exports = defineConfig({
     // },
   ],
   webServer: {
-    command: "node app.js --datadir ./contents",
+    command: "node app.js ./contents --title TestSite",
     url: "http://localhost:8080",
     reuseExistingServer: !process.env.CI,
     timeout: 10000,

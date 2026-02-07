@@ -5,16 +5,17 @@
 }:
 with lib; let
   cfg = config.services.molesk;
+  settings = cfg.settings;
   molesk = pkgs.callPackage ./package.nix { };
 in
 {
   options.services.molesk = {
     enable = mkEnableOption "Whether to enable molesk";
 
-    dataDir = mkOption {
+    data = mkOption {
       type = types.str;
       default = "/var/lib/molesk";
-      description = "The directory where the markdown files are located.";
+      description = "Path to markdown file or directory containing markdown files.";
     };
 
     address = mkOption {
@@ -27,41 +28,6 @@ in
       type = types.int;
       default = 8080;
       description = "Port number for the service.";
-    };
-
-    name = mkOption {
-      type = types.str;
-      default = "Molesk";
-      description = "The name to be displayed on the site.";
-    };
-
-    image = mkOption {
-      type = types.path;
-      default = "";
-      description = "Path to the profile picture.";
-    };
-
-    links = mkOption {
-      type = types.listOf (types.submodule {
-        options = {
-          fab = mkOption {
-            type = types.str;
-            description = "FontAwesome icon class for the link.";
-          };
-          url = mkOption {
-            type = types.str;
-            description = "URL for the link.";
-          };
-        };
-      });
-      default = [ ];
-      description = "Social media links.";
-    };
-
-    sourceLink = mkOption {
-      type = types.str;
-      default = "https://github.com/tupakkatapa/molesk";
-      description = "Source code link displayed in the interface.";
     };
 
     openFirewall = mkOption {
@@ -81,13 +47,58 @@ in
       default = cfg.user;
       description = "Group under which service runs.";
     };
+
+    settings = {
+      title = mkOption {
+        type = types.str;
+        default = "";
+        description = "The title to be displayed on the site. Defaults to data source name if not set.";
+      };
+
+      image = mkOption {
+        type = types.str;
+        default = "";
+        description = "Path to the profile picture.";
+      };
+
+      links = mkOption {
+        type = types.listOf (types.submodule {
+          options = {
+            fab = mkOption {
+              type = types.str;
+              description = "FontAwesome icon class for the link.";
+            };
+            url = mkOption {
+              type = types.str;
+              description = "URL for the link.";
+            };
+          };
+        });
+        default = [ ];
+        description = "Social media links.";
+      };
+
+      source.enable = mkOption {
+        type = types.bool;
+        default = true;
+        description = "Show source code link in footer.";
+      };
+
+      rss.enable = mkOption {
+        type = types.bool;
+        default = true;
+        description = "Show RSS feed link in footer.";
+      };
+
+      download.enable = mkOption {
+        type = types.bool;
+        default = true;
+        description = "Show download button on content.";
+      };
+    };
   };
 
   config = mkIf cfg.enable {
-    systemd.tmpfiles.rules = [
-      "d ${cfg.dataDir} 0700 ${cfg.user} ${cfg.group} - -"
-    ];
-
     systemd.services.molesk = {
       after = [ "network.target" ];
       wantedBy = [ "multi-user.target" ];
@@ -100,21 +111,21 @@ in
         # Hardening
         NoNewPrivileges = true;
         ProtectSystem = "strict";
-        ProtectHome = true;
+        ProtectHome = "read-only";
         PrivateTmp = true;
-        ReadWritePaths = [ cfg.dataDir ];
       };
       script =
         ''
-          ${molesk}/bin/molesk \
-          --datadir ${escapeShellArg cfg.dataDir} \
+          ${molesk}/bin/molesk ${escapeShellArg cfg.data} \
           --port ${toString cfg.port} \
           --address ${escapeShellArg cfg.address} \
-          --name ${escapeShellArg cfg.name} \
-          --image ${escapeShellArg cfg.image} \
-          --source ${escapeShellArg cfg.sourceLink} \
         ''
-        + (concatStringsSep " " (map (item: "--link ${escapeShellArg "${item.fab}:${item.url}"}") cfg.links));
+        + optionalString (settings.title != "") "--title ${escapeShellArg settings.title} "
+        + optionalString (settings.image != "") "--image ${escapeShellArg settings.image} "
+        + optionalString (!settings.source.enable) "--no-source "
+        + optionalString (!settings.rss.enable) "--no-rss "
+        + optionalString (!settings.download.enable) "--no-download "
+        + (concatStringsSep " " (map (item: "--link ${escapeShellArg "${item.fab}:${item.url}"}") settings.links));
     };
 
     networking.firewall = mkIf cfg.openFirewall {
@@ -125,7 +136,6 @@ in
       "molesk" = {
         isSystemUser = true;
         group = cfg.group;
-        home = cfg.dataDir;
       };
     };
 

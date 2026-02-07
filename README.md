@@ -50,16 +50,19 @@ For NixOS users, this can be seamlessly integrated as a module:
 
 ### Options
 
-- **`enable`** -- Enables the molesk service.
-- **`dataDir`** -- Directory where markdown files are located (default: `/var/lib/molesk`).
-- **`address`** -- Host address for the service (default: `0.0.0.0`).
-- **`port`** -- Port number for the service (default: `8080`).
-- **`name`** -- Name displayed on the site (default: `Molesk`).
-- **`image`** -- Path to the profile picture.
-- **`links`** -- Social media links, each with a `fab` (FontAwesome icon class) and `url`.
-- **`sourceLink`** -- Source code link displayed in the interface (default: `https://github.com/tupakkatapa/molesk`).
-- **`openFirewall`** -- Open ports in the firewall for the web interface (default: `false`).
-- **`user`** / **`group`** -- User and group under which the service runs (default: `molesk`).
+- **`enable`** – Enables the molesk service.
+- **`data`** – Path to markdown file or directory (default: `/var/lib/molesk`).
+- **`address`** – Host address for the service (default: `0.0.0.0`).
+- **`port`** – Port number for the service (default: `8080`).
+- **`openFirewall`** – Open ports in the firewall for the web interface (default: `false`).
+- **`user`** / **`group`** – User and group under which the service runs (default: `molesk`).
+- **`settings`** – Display and feature settings.
+  - **`title`** – Title displayed on the site (default: data source name).
+  - **`image`** – Path to the profile picture.
+  - **`links`** – Social media links, each with a `fab` (FontAwesome icon class) and `url`.
+  - **`source.enable`** – Show source code link in footer (default: `true`).
+  - **`rss.enable`** – Show RSS feed link in footer (default: `true`).
+  - **`download.enable`** – Show download button on content (default: `true`).
 
 ### Example
 
@@ -67,23 +70,25 @@ For NixOS users, this can be seamlessly integrated as a module:
 {
   services.molesk = {
     enable = true;
-    name = "Your Name";
-    dataDir = "/path/to/content";
-    image = "/path/to/image.jpg";
-    links = [
-      { fab = "fa-github"; url = "https://github.com/yourusername"; }
-      { fab = "fa-x-twitter"; url = "https://x.com/yourusername"; }
-    ];
+    data = "/path/to/content";
+    settings = {
+      title = "Your Name";
+      image = "/path/to/image.jpg";
+      links = [
+        { fab = "fa-github"; url = "https://github.com/yourusername"; }
+        { fab = "fa-x-twitter"; url = "https://x.com/yourusername"; }
+      ];
+    };
   };
 }
 ```
 
 ## Usage
 
-Place your Markdown (`.md`) files in the configured data directory. Each file becomes a page, and the alphabetically first file serves as the index page.
+Place your Markdown (`.md`) files in the configured data path. Each file becomes a page, and the alphabetically first file serves as the index page.
 
 ```
-dataDir/
+data/
 ├── Home.md
 ├── image.jpg
 ├── assets
@@ -113,19 +118,29 @@ nix run github:tupakkatapa/molesk -- [options]
 ```
 
 ```
-$ node app.js --help
-Usage: node [script] [options]
+Usage: molesk [file.md|directory] [options]
+
+Arguments:
+  file.md             Open a single markdown file in viewer mode
+  directory           Serve markdown files from directory
 
 Options:
   -h, --help          Display this help information
-  -d, --datadir       Set the data directory for contents (default: './contents')
+  -o, --open          Auto-open browser after starting server
   -a, --address       Set the host address (default: '0.0.0.0')
   -p, --port          Set the port number (default: 8080)
-  -n, --name          Set the name displayed on the site (default: 'Molesk')
+  -t, --title         Set the title displayed on the site (default: data source name)
   -i, --image         Set the path to the profile picture
   -l, --link          Add link with icon and URL in the format 'icon:url'
                       (e.g., --link fa-github:https://github.com/username)
-  -s, --source        Set the source code repository URL
+  --no-source         Hide source code link in footer
+  --no-rss            Hide RSS feed link in footer
+  --no-download       Hide download button on content
+
+Examples:
+  molesk README.md              View single file (opens browser)
+  molesk ./docs                 Serve docs directory
+  molesk -o ./blog              Serve blog and open browser
 ```
 
 ### Keyboard Shortcuts

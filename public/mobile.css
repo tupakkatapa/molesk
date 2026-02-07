@@ -167,4 +167,21 @@
   .markdown-body p {
     margin-bottom: 16px;
   }
+
+  /* Sidebar toggle zone - clickable area when collapsed */
+  .sidebar-toggle-zone {
+    display: block;
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 45px;
+    height: 100%;
+    cursor: pointer;
+    z-index: 2;
+  }
+
+  /* Disable toggle zone when sidebar is open */
+  .sidebar:not(.collapsed) .sidebar-toggle-zone {
+    pointer-events: none;
+  }
 }

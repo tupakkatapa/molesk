@@ -82,3 +82,41 @@ body.no-scroll {
   margin-left: 45px;
   width: calc(100% - 45px);
 }
+
+/* Single file viewer mode */
+body.single-file-mode .container {
+  height: auto;
+  min-height: 100vh;
+}
+
+body.single-file-mode .main {
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+  max-width: 900px;
+  height: auto;
+  overflow: visible;
+}
+
+body.single-file-mode .single-file-theme-toggle {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 100;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #7a7062;
+  font-size: 20px;
+  padding: 6px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+}
+
+body.single-file-mode .single-file-theme-toggle:hover {
+  color: #3b3428;
+}

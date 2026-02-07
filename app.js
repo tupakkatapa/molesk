@@ -8,7 +8,6 @@ const fs = require("fs").promises;
 const fsSync = require("fs");
 const path = require("path");
 const yaml = require("js-yaml");
-const favicon = require("serve-favicon");
 const RSS = require("rss");
 
 // Cache ESM mime module (v4 is ESM-only)
@@ -50,10 +49,15 @@ const ERROR_MESSAGES = {
 let PORT = 8080;
 let HOST = "0.0.0.0";
 let CONTENTS_DIR = path.join(__dirname, "contents");
-let NAME = "Molesk";
+let TITLE = null; // Will default to directory/file name if not set
 let IMAGE = "";
 const SOCIAL_LINKS = [];
-let SOURCE_LINK = "https://github.com/tupakkatapa/molesk";
+const SOURCE_LINK = "https://github.com/tupakkatapa/molesk";
+let SHOW_SOURCE = true;
+let SHOW_RSS = true;
+let SHOW_DOWNLOAD = true;
+let SINGLE_FILE = null; // Path to single file when in viewer mode
+let AUTO_OPEN = false;
 
 // --- Helpers ---
 // Simple string capitalize
@@ -66,6 +70,8 @@ const asyncHandler = (fn) => (req, res, next) =>
 // Command-line argument parsing
 function parseArgs() {
   const args = process.argv.slice(2);
+  const positionalArgs = [];
+
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
     switch (arg) {
@@ -73,12 +79,6 @@ function parseArgs() {
       case "--help":
         displayHelp();
         process.exit(0);
-      case "-d":
-      case "--datadir":
-        if (args[i + 1]) {
-          CONTENTS_DIR = args[++i];
-        }
-        break;
       case "-a":
       case "--address":
         if (args[i + 1]) {
@@ -91,12 +91,12 @@ function parseArgs() {
           PORT = parseInt(args[++i], 10);
         }
         break;
-      case "-n":
-      case "--name":
+      case "-t":
+      case "--title":
         if (args[i + 1] && !args[i + 1].startsWith("-")) {
-          NAME = args[++i];
+          TITLE = args[++i];
           while (i + 1 < args.length && !args[i + 1].startsWith("-")) {
-            NAME += ` ${args[++i]}`;
+            TITLE += ` ${args[++i]}`;
           }
         }
         break;
@@ -126,33 +126,105 @@ function parseArgs() {
         }
         i--; // Adjust index for outer loop
         break;
-      case "-s":
-      case "--source":
-        if (args[i + 1]) {
-          SOURCE_LINK = args[++i];
-        }
+      case "--no-source":
+        SHOW_SOURCE = false;
+        break;
+      case "--no-rss":
+        SHOW_RSS = false;
+        break;
+      case "--no-download":
+        SHOW_DOWNLOAD = false;
+        break;
+      case "-o":
+      case "--open":
+        AUTO_OPEN = true;
         break;
       default:
+        // Collect positional arguments (files/directories without flags)
+        if (!arg.startsWith("-")) {
+          positionalArgs.push(arg);
+        }
         break;
+    }
+  }
+
+  // Handle positional argument as file or directory
+  if (positionalArgs.length > 0) {
+    const target = path.resolve(positionalArgs[0]);
+    if (fsSync.existsSync(target)) {
+      const stat = fsSync.statSync(target);
+      if (
+        stat.isFile() &&
+        MD_EXTENSIONS.includes(path.extname(target).toLowerCase())
+      ) {
+        SINGLE_FILE = target;
+        CONTENTS_DIR = path.dirname(target);
+        AUTO_OPEN = true; // Auto-open for single file viewing
+      } else if (stat.isDirectory()) {
+        CONTENTS_DIR = target;
+      }
+    } else {
+      console.error(`Error: Path does not exist: ${target}`);
+      process.exit(1);
     }
   }
 }
 
 function displayHelp() {
-  console.log(`Usage: node [script] [options]
+  console.log(`Usage: molesk [file.md|directory] [options]
+
+Arguments:
+  file.md             Open a single markdown file in viewer mode
+  directory           Serve markdown files from directory
+
 Options:
   -h, --help          Display this help information
-  -d, --datadir       Set the data directory for contents (default: './contents')
+  -o, --open          Auto-open browser after starting server
   -a, --address       Set the host address (default: '0.0.0.0')
   -p, --port          Set the port number (default: 8080)
-  -n, --name          Set the name displayed on the site (default: 'Molesk')
+  -t, --title         Set the title displayed on the site (default: data source name)
   -i, --image         Set the path to the profile picture
   -l, --link          Add link with icon and URL in the format 'icon:url'
                       (e.g., --link fa-github:https://github.com/username)
-  -s, --source        Set the source code repository URL`);
+  --no-source         Hide source code link in footer
+  --no-rss            Hide RSS feed link in footer
+  --no-download       Hide download button on content
+
+Examples:
+  molesk README.md              View single file (opens browser)
+  molesk ./docs                 Serve docs directory
+  molesk -o ./blog              Serve blog and open browser`);
+}
+
+// Open URL in default browser
+function openBrowser(url) {
+  const { exec } = require("child_process");
+  const platform = process.platform;
+  const cmd =
+    platform === "darwin"
+      ? "open"
+      : platform === "win32"
+        ? "start"
+        : "xdg-open";
+  exec(`${cmd} ${url}`);
 }
 
 parseArgs();
+
+// Default TITLE to directory/file name if not explicitly set
+if (TITLE === null) {
+  if (SINGLE_FILE) {
+    // Use filename without extension
+    TITLE = capitalize(
+      path
+        .basename(SINGLE_FILE, path.extname(SINGLE_FILE))
+        .replace(/[-_]/g, " "),
+    );
+  } else {
+    // Use directory name
+    TITLE = capitalize(path.basename(CONTENTS_DIR));
+  }
+}
 
 // --- Caches ---
 const folderStructureCache = new Map();
@@ -210,7 +282,6 @@ app.use((req, res, next) => {
 });
 
 app.use(express.static(path.join(__dirname, "public"), { maxAge: "1h" }));
-app.use(favicon(path.join(__dirname, "public", "favicon.ico")));
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
@@ -293,8 +364,9 @@ app.get(
       return res.status(400).send(ERROR_MESSAGES.UNSUPPORTED_FILE);
     }
     await fs.access(filePath);
-    const prefix = NAME.toLowerCase().replace(/\s+/g, "_");
-    const downloadName = `${prefix}_${path.basename(filePath).toLowerCase()}`;
+    const prefix = TITLE.toLowerCase().replace(/\s+/g, "_");
+    const filename = path.basename(filePath).toLowerCase().replace(/\s+/g, "_");
+    const downloadName = `${prefix}_${filename}`;
     res.download(filePath, downloadName);
   }),
 );
@@ -339,6 +411,14 @@ app.get(
     res.send(faviconSvgCache);
   }),
 );
+
+// Handle favicon.ico requests - redirect to SVG or return empty
+app.get("/favicon.ico", (req, res) => {
+  if (IMAGE) {
+    return res.redirect(301, "/favicon.svg");
+  }
+  res.status(204).end();
+});
 
 // Utility: find the first markdown file in a directory
 async function findIndexFile(directory) {
@@ -385,21 +465,26 @@ app.get(
       const title =
         capitalize(path.basename(filePath, ext).replace(/[-_]/g, " ")) +
         " - " +
-        NAME;
+        TITLE;
 
       if (req.isAjaxRequest) {
         res.setHeader("Content-Type", "text/html");
         return res.send(outputContent);
       }
       res.render("index", {
-        folderStructure: await generateFolderStructure(CONTENTS_DIR),
+        folderStructure: SINGLE_FILE
+          ? ""
+          : await generateFolderStructure(CONTENTS_DIR),
         initialContent: outputContent,
-        name: NAME,
+        title: TITLE,
         image: IMAGE,
         socialLinks: SOCIAL_LINKS,
-        sourceLink: SOURCE_LINK,
+        sourceLink: SHOW_SOURCE ? SOURCE_LINK : null,
+        showRss: SHOW_RSS,
+        showDownload: SHOW_DOWNLOAD,
         relativePath,
-        title,
+        pageTitle: title,
+        singleFile: !!SINGLE_FILE,
       });
     } else {
       throw Object.assign(
@@ -414,8 +499,8 @@ app.get(
 async function generateRSSFeed() {
   try {
     const feed = new RSS({
-      title: NAME,
-      description: `RSS feed for ${NAME}'s content`,
+      title: TITLE,
+      description: `RSS feed for ${TITLE}'s content`,
       feed_url: `http://${HOST}:${PORT}/rss.xml`,
       site_url: `http://${HOST}:${PORT}`,
       image_url: IMAGE,
@@ -480,8 +565,8 @@ async function generateRSSFeed() {
     if (error.code === "ENOENT" && error.message.includes(CONTENTS_DIR)) {
       // Contents directory doesn't exist - return empty but valid RSS
       const fallbackFeed = new RSS({
-        title: NAME,
-        description: `RSS feed for ${NAME}'s content (no content available)`,
+        title: TITLE,
+        description: `RSS feed for ${TITLE}'s content (no content available)`,
         feed_url: `http://${HOST}:${PORT}/rss.xml`,
         site_url: `http://${HOST}:${PORT}`,
       });
@@ -551,11 +636,13 @@ async function handleError(res, err) {
   res.status(statusCode).render("index", {
     folderStructure,
     initialContent: markdownError,
-    name: NAME,
+    title: TITLE,
     image: IMAGE,
     socialLinks: SOCIAL_LINKS,
-    sourceLink: SOURCE_LINK,
-    title: statusCode.toString() + " - " + NAME,
+    sourceLink: SHOW_SOURCE ? SOURCE_LINK : null,
+    showRss: SHOW_RSS,
+    showDownload: SHOW_DOWNLOAD,
+    pageTitle: statusCode.toString() + " - " + TITLE,
   });
 }
 
@@ -711,4 +798,13 @@ process.on("unhandledRejection", (reason, promise) =>
   console.error("Unhandled rejection:", promise, "reason:", reason),
 );
 
-app.listen(PORT, HOST, () => console.log(`Running on http://${HOST}:${PORT}`));
+app.listen(PORT, HOST, () => {
+  const url = `http://${HOST === "0.0.0.0" ? "localhost" : HOST}:${PORT}`;
+  console.log(`Running on ${url}`);
+  if (AUTO_OPEN) {
+    const openUrl = SINGLE_FILE
+      ? `${url}/content/${encodeURIComponent(path.basename(SINGLE_FILE))}`
+      : url;
+    openBrowser(openUrl);
+  }
+});
