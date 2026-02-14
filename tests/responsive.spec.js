@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-test.describe("Responsive Design", () => {
+test.describe("Responsive Layout", () => {
   test("mobile layout works correctly", async ({ page }) => {
     // Set mobile viewport
     await page.setViewportSize({ width: 375, height: 667 });
@@ -43,7 +43,9 @@ test.describe("Responsive Design", () => {
     const container = page.locator(".container");
     await expect(container).toBeVisible();
   });
+});
 
+test.describe("Responsive Desktop", () => {
   test("desktop layout works correctly", async ({ page }) => {
     // Set desktop viewport
     await page.setViewportSize({ width: 1200, height: 800 });
@@ -66,7 +68,6 @@ test.describe("Responsive Design", () => {
   test("sidebar collapse works", async ({ page }) => {
     await page.setViewportSize({ width: 1200, height: 800 });
     await page.goto("/");
-
     const collapseBtn = page.locator("#collapseSidebar");
     const sidebar = page.locator(".sidebar");
     const container = page.locator(".container");
@@ -93,12 +94,17 @@ test.describe("Responsive Design", () => {
     await expect(sidebar).not.toHaveClass(/.*collapsed.*/);
     await expect(container).not.toHaveClass(/.*sidebar-collapsed.*/);
   });
+});
 
+test.describe("Responsive Theme", () => {
   test("theme toggle works on all screen sizes", async ({ page }) => {
     const viewports = [
-      { width: 375, height: 667 }, // Mobile
-      { width: 768, height: 1024 }, // Tablet
-      { width: 1200, height: 800 }, // Desktop
+      // Mobile
+      { width: 375, height: 667 },
+      // Tablet
+      { width: 768, height: 1024 },
+      // Desktop
+      { width: 1200, height: 800 },
     ];
 
     for (const viewport of viewports) {
@@ -119,24 +125,28 @@ test.describe("Responsive Design", () => {
       await page.evaluate(() => {
         const isDarkTheme = document.body.classList.toggle("dark-theme");
         localStorage.setItem("theme", isDarkTheme ? "dark" : "light");
-        document.getElementById("highlightjs-light").disabled = isDarkTheme;
-        document.getElementById("highlightjs-dark").disabled = !isDarkTheme;
+        document.querySelector("#highlightjs-light").disabled = isDarkTheme;
+        document.querySelector("#highlightjs-dark").disabled = !isDarkTheme;
       });
-      await page.waitForTimeout(100); // Wait for theme change
+      // Wait for theme change
+      await page.waitForTimeout(100);
       await expect(body).not.toHaveClass(/.*dark-theme.*/);
 
       // Toggle back via JavaScript
       await page.evaluate(() => {
         const isDarkTheme = document.body.classList.toggle("dark-theme");
         localStorage.setItem("theme", isDarkTheme ? "dark" : "light");
-        document.getElementById("highlightjs-light").disabled = isDarkTheme;
-        document.getElementById("highlightjs-dark").disabled = !isDarkTheme;
+        document.querySelector("#highlightjs-light").disabled = isDarkTheme;
+        document.querySelector("#highlightjs-dark").disabled = !isDarkTheme;
       });
-      await page.waitForTimeout(100); // Wait for theme change
+      // Wait for theme change
+      await page.waitForTimeout(100);
       await expect(body).toHaveClass(/.*dark-theme.*/);
     }
   });
+});
 
+test.describe("Responsive Accessibility", () => {
   test("navigation is accessible on mobile", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
     await page.goto("/");
@@ -162,33 +172,6 @@ test.describe("Responsive Design", () => {
     }
   });
 
-  test("content is readable on all screen sizes", async ({ page }) => {
-    const viewports = [
-      { width: 320, height: 568 }, // Small mobile
-      { width: 375, height: 667 }, // iPhone
-      { width: 768, height: 1024 }, // Tablet
-      { width: 1200, height: 800 }, // Desktop
-      { width: 1920, height: 1080 }, // Large desktop
-    ];
-
-    for (const viewport of viewports) {
-      await page.setViewportSize(viewport);
-      await page.goto("/");
-
-      // Content should be visible and accessible
-      const content = page.locator("#file-content");
-      await expect(content).toBeVisible();
-      await content.scrollIntoViewIfNeeded();
-      await expect(content).toBeInViewport();
-
-      // Text should not overflow
-      const h1 = page.locator("#file-content h1").first();
-      if ((await h1.count()) > 0) {
-        await expect(h1).toBeInViewport();
-      }
-    }
-  });
-
   test("buttons are properly sized for touch", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
     await page.goto("/");
@@ -210,7 +193,43 @@ test.describe("Responsive Design", () => {
       expect(collapseBtnBox.height).toBeGreaterThan(20);
     }
   });
+});
 
+test.describe("Responsive Content", () => {
+  test("content is readable on all screen sizes", async ({ page }) => {
+    const viewports = [
+      // Small mobile
+      { width: 320, height: 568 },
+      // iPhone
+      { width: 375, height: 667 },
+      // Tablet
+      { width: 768, height: 1024 },
+      // Desktop
+      { width: 1200, height: 800 },
+      // Large desktop
+      { width: 1920, height: 1080 },
+    ];
+
+    for (const viewport of viewports) {
+      await page.setViewportSize(viewport);
+      await page.goto("/");
+
+      // Content should be visible and accessible
+      const content = page.locator("#file-content");
+      await expect(content).toBeVisible();
+      await content.scrollIntoViewIfNeeded();
+      await expect(content).toBeInViewport();
+
+      // Text should not overflow
+      const h1 = page.locator("#file-content h1").first();
+      if ((await h1.count()) > 0) {
+        await expect(h1).toBeInViewport();
+      }
+    }
+  });
+});
+
+test.describe("Responsive Sizing", () => {
   test("horizontal scrolling is not required", async ({ page }) => {
     const viewports = [
       { width: 320, height: 568 },
@@ -241,7 +260,7 @@ test.describe("Responsive Design", () => {
       const mobileFontSize = await h1Mobile.evaluate(
         (el) => window.getComputedStyle(el).fontSize,
       );
-      const mobileFontSizePx = parseInt(mobileFontSize);
+      const mobileFontSizePx = parseInt(mobileFontSize, 10);
 
       // Desktop
       await page.setViewportSize({ width: 1200, height: 800 });
@@ -251,7 +270,7 @@ test.describe("Responsive Design", () => {
       const desktopFontSize = await h1Desktop.evaluate(
         (el) => window.getComputedStyle(el).fontSize,
       );
-      const desktopFontSizePx = parseInt(desktopFontSize);
+      const desktopFontSizePx = parseInt(desktopFontSize, 10);
 
       // Font should be readable on both (16px is acceptable minimum)
       expect(mobileFontSizePx).toBeGreaterThanOrEqual(16);

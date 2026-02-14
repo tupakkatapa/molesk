@@ -1,8 +1,7 @@
 import { test, expect } from "@playwright/test";
 
-test.describe("Theme System", () => {
+test.describe("Theme System - Default State", () => {
   test.beforeEach(async ({ page }) => {
-    // Clear localStorage before each test
     await page.goto("/");
     await page.waitForLoadState("networkidle");
     await page.waitForLoadState("networkidle");
@@ -25,6 +24,15 @@ test.describe("Theme System", () => {
     // Light theme CSS should be disabled
     const lightThemeLink = page.locator("#highlightjs-light");
     await expect(lightThemeLink).toHaveAttribute("disabled");
+  });
+});
+
+test.describe("Theme System - Toggle", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("networkidle");
+    await page.evaluate(() => localStorage.clear());
   });
 
   test("theme toggle button works", async ({ page }) => {
@@ -49,35 +57,44 @@ test.describe("Theme System", () => {
     await page.evaluate(() => {
       const isDarkTheme = document.body.classList.toggle("dark-theme");
       localStorage.setItem("theme", isDarkTheme ? "dark" : "light");
-      document.getElementById("highlightjs-light").disabled = isDarkTheme;
-      document.getElementById("highlightjs-dark").disabled = !isDarkTheme;
+      document.querySelector("#highlightjs-light").disabled = isDarkTheme;
+      document.querySelector("#highlightjs-dark").disabled = !isDarkTheme;
     });
-    await page.waitForTimeout(100); // Wait for theme change
+    // Wait for theme change
+    await page.waitForTimeout(100);
     await expect(body).not.toHaveClass(/.*dark-theme.*/);
 
     // Switch back to dark theme via JavaScript
     await page.evaluate(() => {
       const isDarkTheme = document.body.classList.toggle("dark-theme");
       localStorage.setItem("theme", isDarkTheme ? "dark" : "light");
-      document.getElementById("highlightjs-light").disabled = isDarkTheme;
-      document.getElementById("highlightjs-dark").disabled = !isDarkTheme;
+      document.querySelector("#highlightjs-light").disabled = isDarkTheme;
+      document.querySelector("#highlightjs-dark").disabled = !isDarkTheme;
     });
-    await page.waitForTimeout(100); // Wait for theme change
+    // Wait for theme change
+    await page.waitForTimeout(100);
     await expect(body).toHaveClass(/.*dark-theme.*/);
+  });
+});
+
+test.describe("Theme System - Persistence", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("networkidle");
+    await page.evaluate(() => localStorage.clear());
   });
 
   test("theme persists in localStorage", async ({ page }) => {
     await page.goto("/");
     await page.waitForLoadState("networkidle");
 
-    const themeToggle = page.locator("#themeToggleIcon");
-
     // Switch to light theme via JavaScript
     await page.evaluate(() => {
       const isDarkTheme = document.body.classList.toggle("dark-theme");
       localStorage.setItem("theme", isDarkTheme ? "dark" : "light");
-      document.getElementById("highlightjs-light").disabled = isDarkTheme;
-      document.getElementById("highlightjs-dark").disabled = !isDarkTheme;
+      document.querySelector("#highlightjs-light").disabled = isDarkTheme;
+      document.querySelector("#highlightjs-dark").disabled = !isDarkTheme;
     });
 
     // Check localStorage was updated
@@ -97,14 +114,23 @@ test.describe("Theme System", () => {
     await page.evaluate(() => {
       const isDarkTheme = document.body.classList.toggle("dark-theme");
       localStorage.setItem("theme", isDarkTheme ? "dark" : "light");
-      document.getElementById("highlightjs-light").disabled = isDarkTheme;
-      document.getElementById("highlightjs-dark").disabled = !isDarkTheme;
+      document.querySelector("#highlightjs-light").disabled = isDarkTheme;
+      document.querySelector("#highlightjs-dark").disabled = !isDarkTheme;
     });
 
     const newStoredTheme = await page.evaluate(() =>
       localStorage.getItem("theme"),
     );
     expect(newStoredTheme).toBe("dark");
+  });
+});
+
+test.describe("Theme System - Syntax Highlighting", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("networkidle");
+    await page.evaluate(() => localStorage.clear());
   });
 
   test("syntax highlighting theme switches with main theme", async ({
@@ -113,7 +139,6 @@ test.describe("Theme System", () => {
     await page.goto("/");
     await page.waitForLoadState("networkidle");
 
-    const themeToggle = page.locator("#themeToggleIcon");
     const lightThemeLink = page.locator("#highlightjs-light");
     const darkThemeLink = page.locator("#highlightjs-dark");
 
@@ -125,8 +150,8 @@ test.describe("Theme System", () => {
     await page.evaluate(() => {
       const isDarkTheme = document.body.classList.toggle("dark-theme");
       localStorage.setItem("theme", isDarkTheme ? "dark" : "light");
-      document.getElementById("highlightjs-light").disabled = isDarkTheme;
-      document.getElementById("highlightjs-dark").disabled = !isDarkTheme;
+      document.querySelector("#highlightjs-light").disabled = isDarkTheme;
+      document.querySelector("#highlightjs-dark").disabled = !isDarkTheme;
     });
 
     // Light theme CSS should be enabled, dark disabled
@@ -137,30 +162,22 @@ test.describe("Theme System", () => {
     await page.evaluate(() => {
       const isDarkTheme = document.body.classList.toggle("dark-theme");
       localStorage.setItem("theme", isDarkTheme ? "dark" : "light");
-      document.getElementById("highlightjs-light").disabled = isDarkTheme;
-      document.getElementById("highlightjs-dark").disabled = !isDarkTheme;
+      document.querySelector("#highlightjs-light").disabled = isDarkTheme;
+      document.querySelector("#highlightjs-dark").disabled = !isDarkTheme;
     });
 
     // Dark theme CSS should be enabled again
     await expect(darkThemeLink).not.toHaveAttribute("disabled");
     await expect(lightThemeLink).toHaveAttribute("disabled");
   });
+});
 
-  test("theme works without JavaScript", async ({ browser }) => {
-    // Create new context with JavaScript disabled
-    const context = await browser.newContext({ javaScriptEnabled: false });
-    const jsDisabledPage = await context.newPage();
-    await jsDisabledPage.goto("/");
-
-    // Page should still be usable
-    const content = jsDisabledPage.locator("#file-content");
-    await expect(content).toBeVisible();
-
-    // Theme toggle should be present (though non-functional)
-    const themeToggle = jsDisabledPage.locator("#themeToggleIcon");
-    await expect(themeToggle).toBeVisible();
-
-    await context.close();
+test.describe("Theme System - Preferences", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("networkidle");
+    await page.evaluate(() => localStorage.clear());
   });
 
   test("theme respects user preference from localStorage on load", async ({
@@ -195,6 +212,32 @@ test.describe("Theme System", () => {
     // Should fall back to default dark theme
     const body = page.locator("body");
     await expect(body).toHaveClass(/.*dark-theme.*/);
+  });
+});
+
+test.describe("Theme System - Accessibility", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("networkidle");
+    await page.evaluate(() => localStorage.clear());
+  });
+
+  test("theme works without JavaScript", async ({ browser }) => {
+    // Create new context with JavaScript disabled
+    const context = await browser.newContext({ javaScriptEnabled: false });
+    const jsDisabledPage = await context.newPage();
+    await jsDisabledPage.goto("/");
+
+    // Page should still be usable
+    const content = jsDisabledPage.locator("#file-content");
+    await expect(content).toBeVisible();
+
+    // Theme toggle should be present (though non-functional)
+    const themeToggle = jsDisabledPage.locator("#themeToggleIcon");
+    await expect(themeToggle).toBeVisible();
+
+    await context.close();
   });
 
   test("theme toggle has proper ARIA attributes", async ({ page }) => {

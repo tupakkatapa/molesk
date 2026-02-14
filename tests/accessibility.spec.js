@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
-test.describe("Accessibility", () => {
+test.describe("Accessibility - General", () => {
   test("should not have any automatically detectable accessibility issues", async ({
     page,
   }) => {
@@ -42,7 +42,9 @@ test.describe("Accessibility", () => {
       expect(text?.trim() || ariaLabel).toBeTruthy();
     }
   });
+});
 
+test.describe("Accessibility - Buttons", () => {
   test("should have accessible buttons", async ({ page }) => {
     await page.goto("/");
 
@@ -76,7 +78,9 @@ test.describe("Accessibility", () => {
       }
     }
   });
+});
 
+test.describe("Accessibility - Keyboard navigation", () => {
   test("should support keyboard navigation", async ({ page }) => {
     await page.goto("/");
 
@@ -101,7 +105,9 @@ test.describe("Accessibility", () => {
 
     expect(tabbedElements).toBeGreaterThan(1);
   });
+});
 
+test.describe("Accessibility - Color contrast", () => {
   test("should have proper color contrast", async ({ page }) => {
     await page.goto("/");
 
@@ -114,10 +120,11 @@ test.describe("Accessibility", () => {
         await page.evaluate(() => {
           const isDarkTheme = document.body.classList.toggle("dark-theme");
           localStorage.setItem("theme", isDarkTheme ? "dark" : "light");
-          document.getElementById("highlightjs-light").disabled = isDarkTheme;
-          document.getElementById("highlightjs-dark").disabled = !isDarkTheme;
+          document.querySelector("#highlightjs-light").disabled = isDarkTheme;
+          document.querySelector("#highlightjs-dark").disabled = !isDarkTheme;
         });
-        await page.waitForTimeout(100); // Wait for theme to apply
+        // Wait for theme to apply
+        await page.waitForTimeout(100);
       }
 
       // Run axe with color contrast rules
@@ -128,7 +135,9 @@ test.describe("Accessibility", () => {
       expect(accessibilityScanResults.violations).toEqual([]);
     }
   });
+});
 
+test.describe("Accessibility - Images", () => {
   test("should have accessible images", async ({ page }) => {
     await page.goto("/");
 
@@ -152,7 +161,9 @@ test.describe("Accessibility", () => {
       expect(alt).not.toBeNull();
     }
   });
+});
 
+test.describe("Accessibility - Forms", () => {
   test("should have accessible forms (if any)", async ({ page }) => {
     await page.goto("/");
 
@@ -179,13 +190,15 @@ test.describe("Accessibility", () => {
       }
     }
   });
+});
 
+test.describe("Accessibility - Dynamic content", () => {
   test("should announce dynamic content changes", async ({ page }) => {
     await page.goto("/");
 
     // Check for aria-live regions for dynamic content
     const liveRegions = page.locator("[aria-live]");
-    const liveCount = await liveRegions.count();
+    const _liveCount = await liveRegions.count();
 
     // For copy buttons, test announcements
     const codeBlock = page.locator("pre code").first();
@@ -199,15 +212,12 @@ test.describe("Accessibility", () => {
 
         // Button text change should be announced
         await expect(copyBtn).toHaveText("Copied!");
-
-        // Could add aria-live region for better screen reader support
-        const ariaLive = await copyBtn.getAttribute("aria-live");
-        // This is a recommendation, not a requirement
-        // expect(ariaLive).toBe('polite');
       }
     }
   });
+});
 
+test.describe("Accessibility - Degradation and landmarks", () => {
   test("should work without JavaScript", async ({ page, context }) => {
     // Disable JavaScript
     await context.setExtraHTTPHeaders({});

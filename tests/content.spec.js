@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-test.describe("Content Loading & Navigation", () => {
+test.describe("Content Loading & Rendering", () => {
   test("homepage loads and redirects to first content", async ({ page }) => {
     await page.goto("/");
 
@@ -28,6 +28,22 @@ test.describe("Content Loading & Navigation", () => {
     await expect(content).toHaveClass(/.*markdown-body.*/);
   });
 
+  test("syntax highlighting works", async ({ page }) => {
+    // Go to a page that should have code blocks
+    await page.goto("/content/tests/Markdown-it.md");
+
+    // Look for syntax highlighted code
+    const codeBlocks = page.locator("pre code");
+    if ((await codeBlocks.count()) > 0) {
+      // Should have hljs class for syntax highlighting
+      const firstCodeBlock = codeBlocks.first();
+      const classes = await firstCodeBlock.getAttribute("class");
+      expect(classes).toContain("hljs");
+    }
+  });
+});
+
+test.describe("Content Navigation", () => {
   test("navigation between content works", async ({ page }) => {
     await page.goto("/");
 
@@ -58,7 +74,31 @@ test.describe("Content Loading & Navigation", () => {
       await expect(content).toBeVisible();
     }
   });
+});
 
+test.describe("Sidebar", () => {
+  test("sidebar has navigation links", async ({ page }) => {
+    await page.goto("/");
+
+    // Sidebar should be visible
+    const sidebar = page.locator(".sidebar");
+    await expect(sidebar).toBeVisible();
+
+    // Should have navigation links
+    const navLinks = page.locator('.sidebar a[href^="/content/"]');
+    const linkCount = await navLinks.count();
+    expect(linkCount).toBeGreaterThanOrEqual(1);
+
+    // Links should be visible and have text
+    const firstLink = navLinks.first();
+    await expect(firstLink).toBeVisible();
+
+    const linkText = await firstLink.textContent();
+    expect(linkText.trim().length).toBeGreaterThan(0);
+  });
+});
+
+test.describe("Download & Copy", () => {
   test("download button works for markdown files", async ({ page }) => {
     await page.goto("/content/Home.md");
 
@@ -71,39 +111,6 @@ test.describe("Content Loading & Navigation", () => {
 
     // Should have accessibility attributes
     await expect(downloadBtn).toHaveAttribute("title", "Download");
-  });
-
-  test("RSS feed is accessible", async ({ page }) => {
-    await page.goto("/");
-
-    // RSS copy-link button should be present in social links bar
-    const rssBtn = page.locator(".rss-copy-link");
-    await expect(rssBtn).toBeVisible();
-
-    // Should have RSS URL in data attribute
-    await expect(rssBtn).toHaveAttribute("data-rss-url", "/rss.xml");
-
-    // RSS feed endpoint should be accessible
-    const response = await page.request.get("/rss.xml");
-    expect(response.status()).toBe(200);
-
-    const rssContent = await response.text();
-    expect(rssContent).toContain('<?xml version="1.0"');
-    expect(rssContent).toContain('version="2.0"');
-  });
-
-  test("syntax highlighting works", async ({ page }) => {
-    // Go to a page that should have code blocks
-    await page.goto("/content/tests/Markdown-it.md");
-
-    // Look for syntax highlighted code
-    const codeBlocks = page.locator("pre code");
-    if ((await codeBlocks.count()) > 0) {
-      // Should have hljs class for syntax highlighting
-      const firstCodeBlock = codeBlocks.first();
-      const classes = await firstCodeBlock.getAttribute("class");
-      expect(classes).toContain("hljs");
-    }
   });
 
   test("copy code button works", async ({ page }) => {
@@ -124,27 +131,30 @@ test.describe("Content Loading & Navigation", () => {
       await expect(firstCopyBtn).toContainText("Copied!");
     }
   });
+});
 
-  test("sidebar has navigation links", async ({ page }) => {
+test.describe("RSS Feed", () => {
+  test("RSS feed is accessible", async ({ page }) => {
     await page.goto("/");
 
-    // Sidebar should be visible
-    const sidebar = page.locator(".sidebar");
-    await expect(sidebar).toBeVisible();
+    // RSS copy-link button should be present in social links bar
+    const rssBtn = page.locator(".rss-copy-link");
+    await expect(rssBtn).toBeVisible();
 
-    // Should have navigation links
-    const navLinks = page.locator('.sidebar a[href^="/content/"]');
-    const linkCount = await navLinks.count();
-    expect(linkCount).toBeGreaterThanOrEqual(1);
+    // Should have RSS URL in data attribute
+    await expect(rssBtn).toHaveAttribute("data-rss-url", "/rss.xml");
 
-    // Links should be visible and have text
-    const firstLink = navLinks.first();
-    await expect(firstLink).toBeVisible();
+    // RSS feed endpoint should be accessible
+    const response = await page.request.get("/rss.xml");
+    expect(response.status()).toBe(200);
 
-    const linkText = await firstLink.textContent();
-    expect(linkText.trim().length).toBeGreaterThan(0);
+    const rssContent = await response.text();
+    expect(rssContent).toContain('<?xml version="1.0"');
+    expect(rssContent).toContain('version="2.0"');
   });
+});
 
+test.describe("UI Elements", () => {
   test("profile image loads when present", async ({ page }) => {
     await page.goto("/");
 

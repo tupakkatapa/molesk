@@ -44,7 +44,12 @@
               enable = true;
               package = config.treefmt.build.wrapper;
             };
-            eslint.enable = true;
+            pedantic-oxlint = {
+              enable = true;
+              entry = "oxlint --deny pedantic --deny complexity";
+              files = "\\.(js|ts|jsx|tsx)$";
+              pass_filenames = false;
+            };
             playwright = {
               enable = true;
               entry = "${inputs'.playwright.packages.playwright-test}/bin/playwright test";
@@ -59,6 +64,8 @@
               yarn
               yarn2nix
               nodejs
+              oxlint
+              pre-commit
               inputs'.playwright.packages.playwright-test
             ];
             env = {
