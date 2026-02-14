@@ -5,7 +5,7 @@
 }:
 with lib; let
   cfg = config.services.molesk;
-  settings = cfg.settings;
+  inherit (cfg) settings;
   molesk = pkgs.callPackage ./package.nix { };
 in
 {
@@ -135,7 +135,7 @@ in
     users.users = mkIf (cfg.user == "molesk") {
       "molesk" = {
         isSystemUser = true;
-        group = cfg.group;
+        inherit (cfg) group;
       };
     };
 
