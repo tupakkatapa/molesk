@@ -225,8 +225,11 @@ app.get(
       " - " +
       config.TITLE;
     if (req.isAjaxRequest) {
+      const downloadButton = config.SHOW_DOWNLOAD
+        ? `<a href="/download/${relativePath}" class="download-icon" title="Download"><i class="fa-solid fa-download"></i></a>`
+        : "";
       res.setHeader("Content-Type", "text/html");
-      return res.send(outputContent);
+      return res.send(outputContent + downloadButton);
     }
     res.render("index", {
       folderStructure: config.SINGLE_FILE
