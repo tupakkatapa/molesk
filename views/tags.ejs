@@ -1,0 +1,17 @@
+<div class="folder-index">
+  <div class="folder-head">
+    <h1>Tags</h1>
+  </div>
+  <% if (!tags.length) { %>
+  <div class="index-empty">
+    <i class="fa-solid fa-tag" aria-hidden="true"></i>
+    <p>No tags yet.</p>
+  </div>
+  <% } else { %>
+  <ul class="index-list">
+    <% tags.forEach(function (tag) { %>
+    <li class="index-note"><a href="<%= tag.href %>"><span class="index-title"><%= tag.label %></span><span class="index-excerpt"><%= tag.count %> <%= tag.count === 1 ? "page" : "pages" %></span></a></li>
+    <% }) %>
+  </ul>
+  <% } %>
+</div>

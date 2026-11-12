@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark" data-theme-default="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#1a1812">
+  <title>Posts - TestSite</title>
+  <link rel="alternate" type="application/rss+xml" title="TestSite" href="/rss.xml">
+  <meta property="og:title" content="Posts">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="http://ORIGIN/content/posts/">
+  <meta name="twitter:card" content="summary">
+  
+
+  <link rel="stylesheet" href="/base.css">
+  <link rel="stylesheet" href="/sidebar.css">
+  <link rel="stylesheet" href="/markdown.css">
+  <link rel="stylesheet" href="/folder.css">
+  <link rel="stylesheet" href="/mobile.css">
+  
+  <link rel="stylesheet" href="/literata.css">
+  <link rel="stylesheet" href="/vendor/fontawesome/css/fontawesome.min.css">
+  <link rel="stylesheet" href="/vendor/fontawesome/css/solid.min.css">
+  <link rel="stylesheet" href="/vendor/fontawesome/css/regular.min.css">
+  <link rel="stylesheet" href="/vendor/fontawesome/css/brands.min.css">
+  <link rel="stylesheet" id="highlightjs-light" href="/vendor/highlight.js/github.min.css" disabled>
+  <link rel="stylesheet" id="highlightjs-dark" href="/vendor/highlight.js/github-dark.min.css">
+  <script src="/theme.js"></script>
+</head>
+<body>
+  <div class="container">
+    
+    
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+    <nav class="sidebar" id="sidebar" aria-label="Site navigation">
+      
+      <div class="sidebar-head">
+        
+        <a class="site-name" href="/"><span>~ TestSite</span></a>
+        
+        <button type="button" class="icon-btn theme-toggle" id="themeToggleIcon" title="Toggle theme (t)" aria-label="Toggle between light and dark theme"><i class="fa-solid fa-circle-half-stroke" aria-hidden="true"></i></button>
+        <button type="button" class="icon-btn sidebar-close" id="collapseSidebar" aria-controls="sidebar" aria-label="Hide sidebar" title="Hide sidebar"><i class="fa-solid fa-angles-left on-wide" aria-hidden="true"></i><i class="fa-solid fa-xmark on-narrow" aria-hidden="true"></i></button>
+      </div>
+      <div class="sidebar-content">
+        
+        
+        <div class="tree-search">
+          <input type="search" class="tree-filter" placeholder="Search" title="Search (/)" aria-label="Search pages by name" autocomplete="off">
+          <button type="button" class="sidebar-search" aria-label="Search page text" title="Search page text (Ctrl+K)"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></button>
+        </div>
+        
+        <div class="navigation-buttons">
+          <ul class="tree" style="--depth: 0">
+            <li class="folder current" data-path="posts"><button type="button" class="tree-row" aria-expanded="true"><i class="fa-regular fa-folder-open fa-fw" aria-hidden="true"></i><span class="tree-name">Posts</span></button><ul style="--depth: 1">
+<li class="note"><a class="tree-row" href="/content/posts/my-first-post" data-path="posts/My First Post.md"><i class="fa-regular fa-file-lines fa-fw" aria-hidden="true"></i><span class="tree-name">My First Post</span><time datetime="2024-03-30">30 Mar 2024</time></a></li>
+</ul></li>
+<li class="folder" data-path="tests"><button type="button" class="tree-row" aria-expanded="false"><i class="fa-regular fa-folder fa-fw" aria-hidden="true"></i><span class="tree-name">Tests</span></button><ul style="--depth: 1" hidden>
+<li class="note"><a class="tree-row" href="/content/tests/%C3%A4iti" data-path="tests/Äiti.md"><i class="fa-regular fa-file-lines fa-fw" aria-hidden="true"></i><span class="tree-name">Äiti</span></a></li>
+<li class="note"><a class="tree-row" href="/content/tests/markdown-it" data-path="tests/Markdown-it.md"><i class="fa-regular fa-file-lines fa-fw" aria-hidden="true"></i><span class="tree-name">Markdown it</span></a></li>
+</ul></li>
+
+          </ul>
+          
+          <p class="tree-empty" role="status" hidden>No pages match</p>
+          
+        </div>
+      </div>
+      
+      <div class="sidebar-links">
+        
+        
+        <a href="https://github.com/tupakkatapa/molesk" class="social-link" title="Source Code" aria-label="Source Code"><i class="fa-solid fa-code"></i></a>
+        
+        
+        <a href="#" class="social-link rss-copy-link" title="Copy RSS Feed Link" aria-label="Copy RSS Feed Link" data-rss-url="/rss.xml"><i class="fa-solid fa-rss"></i></a>
+        
+      </div>
+      
+    </nav>
+    
+    <main class="main" role="main">
+      
+      <header class="topbar">
+        <button class="menu-btn icon-btn" id="menuToggle" aria-controls="sidebar" aria-label="Open navigation"><i class="fa-solid fa-bars" aria-hidden="true"></i></button>
+        <div class="topbar-text">
+          <span class="topbar-title">Posts</span>
+          
+        </div>
+        <button type="button" class="icon-btn topbar-search" aria-label="Search" title="Search (Ctrl+K)"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></button>
+        
+        <a class="icon-btn topbar-edit" href="#" aria-label="Edit" title="Edit (e)" hidden><i class="fa-solid fa-pen" aria-hidden="true"></i></a>
+        <a class="icon-btn topbar-download" href="#" aria-label="Download" title="Download" hidden><i class="fa-solid fa-download" aria-hidden="true"></i></a>
+        
+      </header>
+      
+      
+      <div id="file-content" class="markdown-body" data-path="posts">
+        
+        <div class="folder-index">
+  
+  <nav class="crumbs" aria-label="Breadcrumb">
+    <a href="/">TestSite</a><span class="crumb-sep" aria-hidden="true">/</span>
+  </nav>
+  
+  
+  <div class="folder-head">
+    <h1>Posts</h1>
+    
+  </div>
+  <p class="folder-error" role="alert" hidden></p>
+  
+  
+  <ul class="index-list">
+    
+    
+    <li class="index-note"><a href="/content/posts/my-first-post"><span class="index-title">My First Post</span><time datetime="2024-03-30">30 Mar 2024</time><span class="index-excerpt">I use NixOS BTW</span></a></li>
+    
+    
+  </ul>
+  
+  
+</div>
+
+      </div>
+      
+    </main>
+  </div>
+  <dialog class="switcher" aria-label="Go to a page">
+    <div class="switcher-field">
+      <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+      <input type="text" class="switcher-input" role="combobox" aria-label="Page name or text" aria-controls="switcherList" aria-expanded="true" aria-autocomplete="list" placeholder="Go to a page or search the text" autocomplete="off" spellcheck="false" enterkeyhint="go">
+      <kbd class="switcher-key">Esc</kbd>
+    </div>
+    <ul class="switcher-list" id="switcherList" role="listbox" aria-label="Pages"></ul>
+    <p class="switcher-note" role="status"></p>
+  </dialog>
+
+  <script type="module" src="/main.js"></script>
+  <script type="module" src="/content.js"></script>
+  <script type="module" src="/switcher.js"></script>
+  
+</body>
+</html>

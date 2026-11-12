@@ -1,0 +1,12 @@
+<%_ items.forEach(function (item) { _%>
+<%_ if (item.folder) { const open = current === item.path || current.startsWith(item.path + '/'); _%>
+<li class="folder<%= current === item.path ? ' current' : '' %>" data-path="<%= item.path %>"><button type="button" class="tree-row" aria-expanded="<%= open %>"><i class="fa-regular fa-folder<%= open ? '-open' : '' %> fa-fw" aria-hidden="true"></i><span class="tree-name"><%= item.title %></span></button><ul style="--depth: <%= depth + 1 %>"<% if (!open) { %> hidden<% } %>>
+<%- include('tree', { items: item.children, depth: depth + 1, dir: item.path + '/', current: current }) _%>
+</ul></li>
+<%_ } else { _%>
+<li class="note<%= current === item.path ? ' active' : '' %>"><a class="tree-row" href="<%= item.href %>" data-path="<%= item.path %>"<% if (current === item.path) { %> aria-current="page"<% } %>><i class="fa-regular fa-file-lines fa-fw" aria-hidden="true"></i><span class="tree-name"><%= item.title %></span><% if (item.draft) { %><span class="badge">Draft</span><% } else if (item.date) { %><time datetime="<%= item.date %>"><%= item.day %></time><% } %></a></li>
+<%_ } _%>
+<%_ }) _%>
+<%_ if (editMode) { _%>
+<li class="tree-new"><button type="button" class="tree-row" data-dir="<%= dir %>"><i class="fa-solid fa-plus fa-fw" aria-hidden="true"></i><span class="tree-name">New</span></button></li>
+<%_ } _%>

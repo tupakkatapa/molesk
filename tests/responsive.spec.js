@@ -54,11 +54,11 @@ test.describe("Responsive Desktop", () => {
     // Sidebar should be expanded
     const sidebar = page.locator(".sidebar");
     await expect(sidebar).toBeVisible();
-    await expect(sidebar).not.toHaveClass(/.*collapsed.*/);
+    await expect(sidebar).not.toHaveClass(/.*collapsed.*/u);
 
     // Container should not have collapsed class
     const container = page.locator(".container");
-    await expect(container).not.toHaveClass(/.*sidebar-collapsed.*/);
+    await expect(container).not.toHaveClass(/.*sidebar-collapsed.*/u);
 
     // Both sidebar and main content should be visible
     const mainContent = page.locator(".main");
@@ -83,16 +83,16 @@ test.describe("Responsive Desktop", () => {
     await page.waitForTimeout(300);
 
     // Sidebar should have collapsed class
-    await expect(sidebar).toHaveClass(/.*collapsed.*/);
-    await expect(container).toHaveClass(/.*sidebar-collapsed.*/);
+    await expect(sidebar).toHaveClass(/.*collapsed.*/u);
+    await expect(container).toHaveClass(/.*sidebar-collapsed.*/u);
 
     // Click to expand
-    await collapseBtn.click();
+    await page.locator("#menuToggle").click();
     await page.waitForTimeout(300);
 
     // Sidebar should be expanded again
-    await expect(sidebar).not.toHaveClass(/.*collapsed.*/);
-    await expect(container).not.toHaveClass(/.*sidebar-collapsed.*/);
+    await expect(sidebar).not.toHaveClass(/.*collapsed.*/u);
+    await expect(container).not.toHaveClass(/.*sidebar-collapsed.*/u);
   });
 });
 
@@ -113,35 +113,31 @@ test.describe("Responsive Theme", () => {
       await page.waitForLoadState("networkidle");
 
       const themeToggle = page.locator("#themeToggleIcon");
-      const body = page.locator("body");
+      const body = page.locator("html");
 
       // Theme toggle should be visible
       await expect(themeToggle).toBeVisible();
 
       // Should start in dark theme
-      await expect(body).toHaveClass(/.*dark-theme.*/);
+      await expect(body).toHaveAttribute("data-theme", "dark");
 
       // Toggle theme via JavaScript (more reliable than clicks)
       await page.evaluate(() => {
-        const isDarkTheme = document.body.classList.toggle("dark-theme");
-        localStorage.setItem("theme", isDarkTheme ? "dark" : "light");
-        document.querySelector("#highlightjs-light").disabled = isDarkTheme;
-        document.querySelector("#highlightjs-dark").disabled = !isDarkTheme;
+        const root = document.documentElement;
+        root.dataset.theme = root.dataset.theme === "dark" ? "light" : "dark";
       });
       // Wait for theme change
       await page.waitForTimeout(100);
-      await expect(body).not.toHaveClass(/.*dark-theme.*/);
+      await expect(body).toHaveAttribute("data-theme", "light");
 
       // Toggle back via JavaScript
       await page.evaluate(() => {
-        const isDarkTheme = document.body.classList.toggle("dark-theme");
-        localStorage.setItem("theme", isDarkTheme ? "dark" : "light");
-        document.querySelector("#highlightjs-light").disabled = isDarkTheme;
-        document.querySelector("#highlightjs-dark").disabled = !isDarkTheme;
+        const root = document.documentElement;
+        root.dataset.theme = root.dataset.theme === "dark" ? "light" : "dark";
       });
       // Wait for theme change
       await page.waitForTimeout(100);
-      await expect(body).toHaveClass(/.*dark-theme.*/);
+      await expect(body).toHaveAttribute("data-theme", "dark");
     }
   });
 });
@@ -152,8 +148,8 @@ test.describe("Responsive Accessibility", () => {
     await page.goto("/");
 
     // On mobile, sidebar starts collapsed, so open it first
-    const collapseBtn = page.locator("#collapseSidebar");
-    await collapseBtn.click();
+    const menuToggle = page.locator("#menuToggle");
+    await menuToggle.click();
 
     // Wait for sidebar to open
     await page.waitForTimeout(300);

@@ -1,0 +1,8 @@
+<nav class="pager" aria-label="More pages">
+<%_ if (prev) { _%>
+  <a class="pager-link pager-prev" href="<%= prev.href %>" rel="prev"><span class="pager-label"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i><%= prev.label %></span><span class="pager-title"><%= prev.title %></span></a>
+<%_ } _%>
+<%_ if (next) { _%>
+  <a class="pager-link pager-next" href="<%= next.href %>" rel="next"><span class="pager-label"><%= next.label %><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span><span class="pager-title"><%= next.title %></span></a>
+<%_ } _%>
+</nav>

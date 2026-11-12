@@ -1,0 +1,57 @@
+<div class="folder-index">
+  <% if (index.crumbs.length) { %>
+  <nav class="crumbs" aria-label="Breadcrumb">
+    <% index.crumbs.forEach(function (crumb) { %><a href="<%= crumb.href %>"><%= crumb.name %></a><span class="crumb-sep" aria-hidden="true">/</span><% }) %>
+  </nav>
+  <% } %>
+  <% const empty = !index.folders.length && !index.notes.length; %>
+  <div class="folder-head">
+    <h1<% if (!index.path && index.dir !== null) { %> class="visually-hidden"<% } %>><%= index.title %></h1>
+    <% if (editMode && index.path) { %>
+    <div class="folder-actions" data-path="<%= index.path %>" data-name="<%= index.name %>" data-parent="<%= index.parent %>">
+      <button type="button" class="icon-btn folder-more" popovertarget="folderMenu" aria-label="Folder actions" title="Folder actions"><i class="fa-solid fa-ellipsis" aria-hidden="true"></i></button>
+    </div>
+    <div class="menu" id="folderMenu" popover role="menu" aria-label="Folder actions">
+      <button type="button" class="menu-item folder-rename-item" role="menuitem"><i class="fa-solid fa-pen" aria-hidden="true"></i>Rename…</button>
+      <% if (empty) { %>
+      <button type="button" class="menu-item menu-danger folder-delete" role="menuitem"><i class="fa-regular fa-trash-can" aria-hidden="true"></i>Delete…</button>
+      <% } %>
+    </div>
+    <% } %>
+  </div>
+  <p class="folder-error" role="alert" hidden></p>
+  <% if (empty) { %>
+  <div class="index-empty">
+    <i class="fa-regular fa-note-sticky" aria-hidden="true"></i>
+    <p>Nothing here yet.</p>
+    <% if (editMode && index.dir !== null) { %>
+    <div class="tree-new index-empty-new"><button type="button" class="btn btn-primary" data-dir="<%= index.dir %>"><i class="fa-solid fa-plus" aria-hidden="true"></i>New page</button></div>
+    <% } %>
+  </div>
+  <% } %>
+  <% if (!empty) { %>
+  <ul class="index-list">
+    <% index.folders.forEach(function (folder) { %>
+    <li class="index-folder"><a href="<%= folder.href %>"><i class="fa-regular fa-folder" aria-hidden="true"></i><span class="index-title"><%= folder.name %></span></a></li>
+    <% }) %>
+    <% index.notes.forEach(function (note) { %>
+    <li class="index-note"><a href="<%= note.href %>"><span class="index-title"><%= note.title %><% if (note.draft) { %> <span class="badge">Draft</span><% } %></span><% if (note.date) { %><time datetime="<%= note.date %>"><%= note.day %></time><% } %><% if (note.excerpt) { %><span class="index-excerpt"><%= note.excerpt %></span><% } %></a></li>
+    <% }) %>
+    <% if (editMode && index.dir !== null) { %>
+    <li class="tree-new index-new"><button type="button" data-dir="<%= index.dir %>"><i class="fa-solid fa-plus" aria-hidden="true"></i> New page</button></li>
+    <% } %>
+  </ul>
+  <% } %>
+  <% if (editMode && index.path && empty) { %>
+  <dialog class="confirm folder-confirm" aria-labelledby="folderDeleteTitle">
+    <form method="dialog">
+      <h2 id="folderDeleteTitle">Delete “<%= index.title %>”?</h2>
+      <p>The folder is empty, so nothing else goes with it.</p>
+      <div class="confirm-actions">
+        <button class="btn" value="cancel" autofocus>Cancel</button>
+        <button class="btn btn-danger" value="delete">Delete</button>
+      </div>
+    </form>
+  </dialog>
+  <% } %>
+</div>

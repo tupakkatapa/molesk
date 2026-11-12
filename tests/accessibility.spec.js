@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { openNav } from "./helpers.js";
 
 test.describe("Accessibility - General", () => {
   test("should not have any automatically detectable accessibility issues", async ({
@@ -58,6 +59,7 @@ test.describe("Accessibility - Buttons", () => {
     }
 
     // Collapse button
+    await openNav(page);
     const collapseBtn = page.locator("#collapseSidebar");
     if (await collapseBtn.isVisible()) {
       // Should be keyboard accessible
@@ -118,10 +120,8 @@ test.describe("Accessibility - Color contrast", () => {
       if (theme === "dark") {
         // Toggle to dark theme via JavaScript (reliable on all viewports)
         await page.evaluate(() => {
-          const isDarkTheme = document.body.classList.toggle("dark-theme");
-          localStorage.setItem("theme", isDarkTheme ? "dark" : "light");
-          document.querySelector("#highlightjs-light").disabled = isDarkTheme;
-          document.querySelector("#highlightjs-dark").disabled = !isDarkTheme;
+          const root = document.documentElement;
+          root.dataset.theme = root.dataset.theme === "dark" ? "light" : "dark";
         });
         // Wait for theme to apply
         await page.waitForTimeout(100);

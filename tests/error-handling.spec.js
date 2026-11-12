@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { pageHref } from "../public/slug.mjs";
 
 test.describe("HTTP Error Responses", () => {
   test("404 page renders correctly", async ({ page }) => {
@@ -9,8 +10,9 @@ test.describe("HTTP Error Responses", () => {
     const content = page.locator("#file-content");
     await expect(content).toBeVisible();
 
-    await expect(content).toContainText("404");
-    await expect(content).toContainText("Not Found");
+    await expect(content.locator("h1")).toHaveText("Not found");
+    await content.getByRole("link", { name: "Back to the start" }).click();
+    await expect(page).toHaveURL(pageHref("Home.md"));
   });
 
   test("unsupported file type returns error", async ({ page }) => {
@@ -110,8 +112,8 @@ test.describe("Network Resilience", () => {
 
     const viewportSize = page.viewportSize();
     if (viewportSize && viewportSize.width <= 768) {
-      const collapseBtn = page.locator("#collapseSidebar");
-      await collapseBtn.click();
+      const menuToggle = page.locator("#menuToggle");
+      await menuToggle.click();
       await page.waitForTimeout(300);
     }
 
@@ -172,8 +174,8 @@ test.describe("Rapid Navigation", () => {
 
     const viewportSize = page.viewportSize();
     if (viewportSize && viewportSize.width <= 768) {
-      const collapseBtn = page.locator("#collapseSidebar");
-      await collapseBtn.click();
+      const menuToggle = page.locator("#menuToggle");
+      await menuToggle.click();
       await page.waitForTimeout(300);
     }
 
@@ -202,13 +204,12 @@ test.describe("Theme Toggle Stability", () => {
 
     const viewportSize = page.viewportSize();
     if (viewportSize && viewportSize.width <= 768) {
-      const collapseBtn = page.locator("#collapseSidebar");
-      await collapseBtn.click();
+      const menuToggle = page.locator("#menuToggle");
+      await menuToggle.click();
       await page.waitForTimeout(300);
     }
 
     const themeToggle = page.locator("#themeToggleIcon");
-    const body = page.locator("body");
 
     await themeToggle.scrollIntoViewIfNeeded();
     await themeToggle.click({ force: true });
@@ -219,12 +220,10 @@ test.describe("Theme Toggle Stability", () => {
     await themeToggle.scrollIntoViewIfNeeded();
     await themeToggle.click({ force: true });
 
-    const hasTheme = await body.evaluate(
-      (el) =>
-        el.classList.contains("dark-theme") ||
-        !el.classList.contains("dark-theme"),
+    await expect(page.locator("html")).toHaveAttribute(
+      "data-theme",
+      /^(?:dark|light)$/u,
     );
-    expect(hasTheme).toBe(true);
 
     await expect(themeToggle).toBeVisible();
   });

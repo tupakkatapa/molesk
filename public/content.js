@@ -1,5 +1,10 @@
-function addCopyButtons() {
-  document.querySelectorAll(".markdown-body pre code").forEach((block) => {
+import { CONFIG, el } from "./dom.js";
+import { renderDiagrams } from "./mermaid.js";
+import { markActiveLink, mobileQuery, setSidebarOpen } from "./sidebar.js";
+
+// Code blocks get a header with their language and a copy button.
+export function enhanceCode(root = document) {
+  root.querySelectorAll(".markdown-body pre code").forEach((block) => {
     const pre = block.parentNode;
 
     // Extract language from class
@@ -23,6 +28,7 @@ function addCopyButtons() {
     copyButton.className = "copy-button";
     copyButton.innerHTML = '<i class="fa-regular fa-copy"></i>';
     copyButton.title = "Copy";
+    copyButton.setAttribute("aria-label", "Copy code");
     copyButton.addEventListener("click", () => {
       navigator.clipboard.writeText(block.textContent).then(() => {
         const icon = copyButton.querySelector("i");
@@ -42,40 +48,36 @@ function addCopyButtons() {
     wrapper.append(header);
     wrapper.append(pre);
   });
+  renderDiagrams(root);
 }
 
 function setupImageLightbox() {
-  // Create lightbox overlay
   const overlay = document.createElement("div");
   overlay.className = "lightbox-overlay";
+  overlay.setAttribute("role", "dialog");
+  overlay.setAttribute("aria-modal", "true");
+  overlay.setAttribute("aria-label", "Image viewer");
   overlay.innerHTML = '<img src="" alt="Lightbox image">';
   document.body.append(overlay);
 
   const lightboxImg = overlay.querySelector("img");
 
-  // Handle image clicks
-  document.querySelectorAll(".markdown-body img").forEach((img) => {
-    img.addEventListener("click", () => {
-      lightboxImg.src = img.src;
-      lightboxImg.alt = img.alt;
-      overlay.classList.add("active");
-      document.body.style.overflow = "hidden";
-    });
-  });
-
-  // Close lightbox
-  overlay.addEventListener("click", () => {
+  const close = () => {
     overlay.classList.remove("active");
     document.body.style.overflow = "";
+  };
+
+  overlay.addEventListener("click", close);
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && overlay.classList.contains("active")) close();
   });
 
-  // Close on escape
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && overlay.classList.contains("active")) {
-      overlay.classList.remove("active");
-      document.body.style.overflow = "";
-    }
-  });
+  return (img) => {
+    lightboxImg.src = img.src;
+    lightboxImg.alt = img.alt;
+    overlay.classList.add("active");
+    document.body.style.overflow = "hidden";
+  };
 }
 
 function setupLazyImages() {
@@ -89,75 +91,111 @@ function setupLazyImages() {
   });
 }
 
-function setupPageTransitions() {
-  const navigateTo = async (href) => {
-    const response = await fetch(href, {
+let shownPath = window.location.pathname;
+
+async function navigateTo(href, { push = true } = {}) {
+  if (el.sidebar && mobileQuery.matches) setSidebarOpen(false);
+
+  let response;
+  let html;
+  try {
+    response = await fetch(href, {
       headers: { "X-Requested-With": "XMLHttpRequest" },
     });
-    const html = await response.text();
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    html = await response.text();
+  } catch {
+    window.location.href = href;
+    return;
+  }
 
-    const content = document.querySelector("#file-content");
-    if (content) {
-      content.innerHTML = html;
-      // Re-initialize features for new content
-      addCopyButtons();
-      setupLazyImages();
-      setupImageLightbox();
-      setupSmoothAnchors();
+  const content = document.querySelector("#file-content");
+  content.innerHTML = html;
+  content.dataset.path = decodeURIComponent(
+    response.headers.get("X-Page-Path") ?? "",
+  );
+  const shown = new URL(response.url).pathname;
+  document.dispatchEvent(new Event("content:loaded"));
+  enhanceCode();
+  setupLazyImages();
+
+  const title = response.headers.get("X-Page-Title");
+  if (title) document.title = decodeURIComponent(title);
+  const heading = response.headers.get("X-Page-Heading");
+  const topbarTitle = document.querySelector(".topbar-title");
+  if (heading && topbarTitle)
+    topbarTitle.textContent = decodeURIComponent(heading);
+  syncTopbarEdit();
+
+  if (push) {
+    window.history.pushState({ href: shown }, "", shown);
+    window.scrollTo({ top: 0, behavior: "instant" });
+  } else if (shown !== window.location.pathname) {
+    window.history.replaceState({ href: shown }, "", shown);
+  }
+  shownPath = window.location.pathname;
+  markActiveLink(shown);
+}
+
+function scrollToAnchor(e, anchor) {
+  const targetId = anchor.getAttribute("href").slice(1);
+  const target = document.querySelector(`#${CSS.escape(targetId)}`);
+  if (target) {
+    e.preventDefault();
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
+    window.history.pushState({}, "", `#${targetId}`);
+  }
+}
+
+function setupClickHandling(openLightbox) {
+  document.addEventListener("click", (e) => {
+    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) {
+      return;
     }
 
-    window.history.pushState({ href }, "", href);
-    updateActiveLink(href);
-  };
+    const img = e.target.closest(".markdown-body img");
+    if (img) {
+      openLightbox(img);
+      return;
+    }
 
-  // Intercept navigation clicks for instant content swap
-  document.querySelectorAll('a[href^="/content/"]').forEach((link) => {
-    link.addEventListener("click", (e) => {
-      const href = link.getAttribute("href");
-      if (href === window.location.pathname) return;
+    const link = e.target.closest("a[href]");
+    if (!link) return;
+    const href = link.getAttribute("href");
 
+    if (href.startsWith("#") && link.closest(".markdown-body")) {
+      scrollToAnchor(e, link);
+    } else if (
+      href.startsWith("/content/") &&
+      href !== window.location.pathname &&
+      document.querySelector("#file-content")
+    ) {
       e.preventDefault();
       navigateTo(href);
-    });
+    }
   });
 
-  // Handle browser back/forward
   window.addEventListener("popstate", () => {
-    const href = window.location.pathname;
-    navigateTo(href);
-  });
-}
-
-function updateActiveLink(href) {
-  document.querySelectorAll(".sidebar li.active").forEach((li) => {
-    li.classList.remove("active");
-  });
-  document.querySelectorAll('.sidebar a[href^="/content/"]').forEach((link) => {
-    if (link.getAttribute("href") === href) {
-      link.closest("li").classList.add("active");
+    if (window.location.pathname !== shownPath) {
+      navigateTo(window.location.pathname, { push: false });
     }
   });
 }
 
-function setupSmoothAnchors() {
-  // Smooth scroll to anchor links within the page
-  document.querySelectorAll('.markdown-body a[href^="#"]').forEach((anchor) => {
-    anchor.addEventListener("click", (e) => {
-      const targetId = anchor.getAttribute("href").slice(1);
-      const target = document.querySelector(`#${CSS.escape(targetId)}`);
-      if (target) {
-        e.preventDefault();
-        target.scrollIntoView({ behavior: "smooth", block: "start" });
-        window.history.pushState({}, "", `#${targetId}`);
-      }
-    });
-  });
+// On phones the note's actions live in the top bar.
+function syncTopbarEdit() {
+  for (const name of ["edit", "download"]) {
+    const button = document.querySelector(`.topbar-${name}`);
+    const action = document.querySelector(`#file-content .${name}-icon`);
+    if (!button) continue;
+    button.hidden = !action;
+    if (action) button.href = action.getAttribute("href");
+  }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  addCopyButtons();
-  setupImageLightbox();
+  syncTopbarEdit();
+  enhanceCode();
   setupLazyImages();
-  setupPageTransitions();
-  setupSmoothAnchors();
+  setupClickHandling(setupImageLightbox());
 });

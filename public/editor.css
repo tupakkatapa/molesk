@@ -1,0 +1,326 @@
+/* Editor: the note card with a sticky action bar */
+.main .editor.markdown-body {
+  padding-top: 0;
+  padding-bottom: var(--space-7);
+}
+
+.editor-bar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 calc(-1 * var(--pad)) var(--space-6);
+  padding: var(--space-3) calc(var(--pad) - var(--space-3));
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+
+.editor-format {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.editor-format-sep {
+  width: 1px;
+  height: 20px;
+  margin: 0 var(--space-2);
+  background: var(--border);
+}
+
+.editor-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.editor-status {
+  min-width: 4.5em;
+  color: var(--muted);
+  font-family: var(--serif);
+  font-size: 13px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.editor-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-4);
+  min-height: 22px;
+}
+
+.editor-meta .metadata {
+  margin: 0 0 0 auto;
+}
+
+.editor.conflicted .editor-status {
+  display: none;
+}
+
+.editor-title {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  margin: var(--space-2) 0 0;
+  padding: 2px 0;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--heading);
+  font-family: var(--serif);
+  font-size: 2em;
+  font-weight: 700;
+  line-height: 1.25;
+  transition: border-color 0.15s var(--ease);
+}
+
+.editor-title:focus {
+  outline: none;
+  border-bottom-color: var(--border);
+}
+
+.editor-title[aria-invalid="true"],
+.editor-title[aria-invalid="true"]:focus {
+  border-bottom-color: var(--danger);
+}
+
+.editor-title-error {
+  margin: var(--space-2) 0 0;
+  color: var(--danger);
+  font-size: 14px;
+}
+
+.editor-conflict:not([hidden]) {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: var(--space-1) var(--space-3);
+  margin: var(--space-5) 0 0;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--warn);
+  border-left-width: 4px;
+  border-radius: var(--radius-sm);
+  background: var(--warn-bg);
+  line-height: 1.5;
+}
+
+.editor-conflict > i {
+  margin-top: 5px;
+  color: var(--warn);
+}
+
+.markdown-body .editor-conflict p {
+  margin: 0;
+}
+
+.editor-conflict-actions {
+  grid-column: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: var(--space-2);
+}
+
+.editor-panes {
+  margin-top: var(--space-5);
+}
+
+.editor-text {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 45vh;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.8;
+  resize: none;
+  overflow: hidden;
+  field-sizing: content;
+  caret-color: var(--accent);
+  scroll-margin-bottom: var(--format-bar-h, 0px);
+}
+
+.editor-text::placeholder {
+  color: var(--placeholder);
+  opacity: 1;
+}
+
+.editor-text:focus {
+  outline: none;
+}
+
+.editor-text::selection {
+  background: var(--selection);
+}
+
+.editor-preview > :first-child {
+  margin-top: 0;
+}
+
+.editor-preview-error {
+  color: var(--muted);
+  font-style: italic;
+}
+
+.editor.split .editor-panes {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-7);
+}
+
+.editor-panes > * {
+  min-width: 0;
+}
+
+.editor.split .editor-preview {
+  padding-left: var(--space-7);
+  margin-left: calc(-1 * var(--space-5));
+  border-left: 1px solid var(--border);
+}
+
+.main .editor.markdown-body.split {
+  max-width: 1500px;
+}
+
+@media (max-width: 999px) {
+  .editor-mode [data-mode="split"] {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .main .editor.markdown-body {
+    padding-bottom: var(--space-6);
+  }
+
+  .editor-bar {
+    margin-bottom: var(--space-5);
+    padding: var(--space-2) var(--space-3);
+    gap: var(--space-2);
+  }
+
+  .editor-format:not(.pinned),
+  .editor .editor-done,
+  .editor .editor-status {
+    display: none;
+  }
+
+  .editor-bar {
+    top: calc(52px + env(safe-area-inset-top));
+  }
+
+  .editor-mode button {
+    height: 44px;
+  }
+
+  .editor-format.pinned {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 900;
+    justify-content: space-around;
+    padding: 4px 8px calc(4px + env(safe-area-inset-bottom));
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+  }
+
+  /* The buttons share the screen width instead of overflowing it */
+  .editor-format.pinned .icon-btn {
+    flex: 1 1 0;
+    width: auto;
+    min-width: 0;
+  }
+
+  .editor-format.pinned .editor-format-sep {
+    display: none;
+  }
+
+  .editor-actions {
+    width: 100%;
+    gap: 4px;
+  }
+
+  .editor-mode {
+    order: -1;
+    margin-right: auto;
+  }
+
+  .editor-mode button {
+    padding: 0 10px;
+  }
+
+  .editor-status {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .editor-title {
+    font-size: 24px;
+  }
+}
+
+.editor-text.dropping {
+  border-radius: var(--radius-sm);
+  outline: 2px dashed var(--accent);
+  outline-offset: 6px;
+  background: var(--hover);
+}
+
+/* History: versions of the note, newest first */
+.history-list {
+  max-height: min(50vh, 420px);
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.history-version {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.history-version time {
+  color: var(--heading);
+  font-weight: 600;
+}
+
+.history-version span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+@media (hover: hover) {
+  .history-version:hover {
+    background: var(--hover);
+  }
+}
+
+.history-version:focus-visible {
+  outline: none;
+  box-shadow: var(--focus);
+}

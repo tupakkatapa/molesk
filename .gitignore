@@ -12,3 +12,4 @@ private
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+undefined-*.json

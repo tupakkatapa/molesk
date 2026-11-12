@@ -1,0 +1,79 @@
+<div class="editor markdown-body" id="editor" data-path="<%= path %>" data-etag="<%= etag %>" data-front="<%= front %>" data-ext="<%= ext %>" data-dir="<%= dir %>" data-after-delete="<%= folderHref %>">
+  <div class="editor-bar">
+    <div class="editor-format" role="toolbar" aria-label="Formatting">
+      <button type="button" class="icon-btn" data-format="bold" aria-label="Bold" title="Bold (Ctrl+B)"><i class="fa-solid fa-bold" aria-hidden="true"></i></button>
+      <button type="button" class="icon-btn" data-format="italic" aria-label="Italic" title="Italic (Ctrl+I)"><i class="fa-solid fa-italic" aria-hidden="true"></i></button>
+      <button type="button" class="icon-btn" data-format="heading" aria-label="Heading" title="Heading"><i class="fa-solid fa-heading" aria-hidden="true"></i></button>
+      <span class="editor-format-sep" aria-hidden="true"></span>
+      <button type="button" class="icon-btn" data-format="list" aria-label="Bulleted list" title="Bulleted list"><i class="fa-solid fa-list-ul" aria-hidden="true"></i></button>
+      <button type="button" class="icon-btn" data-format="task" aria-label="Checklist" title="Checklist"><i class="fa-regular fa-square-check" aria-hidden="true"></i></button>
+      <span class="editor-format-sep" aria-hidden="true"></span>
+      <button type="button" class="icon-btn" data-format="link" aria-label="Link" title="Link (Ctrl+K)"><i class="fa-solid fa-link" aria-hidden="true"></i></button>
+      <button type="button" class="icon-btn" data-format="code" aria-label="Code" title="Code"><i class="fa-solid fa-code" aria-hidden="true"></i></button>
+      <button type="button" class="icon-btn" data-format="codeblock" aria-label="Code block" title="Code block"><i class="fa-solid fa-file-code" aria-hidden="true"></i></button>
+      <button type="button" class="icon-btn" data-format="table" aria-label="Table" title="Table"><i class="fa-solid fa-table" aria-hidden="true"></i></button>
+    </div>
+    <div class="editor-actions">
+      <span class="editor-status" role="status" aria-live="polite"></span>
+      <div class="segmented editor-mode" role="group" aria-label="View">
+        <button type="button" data-mode="write" aria-pressed="true">Write</button>
+        <button type="button" data-mode="split" aria-pressed="false">Split</button>
+        <button type="button" data-mode="preview" aria-pressed="false">Preview</button>
+      </div>
+      <button type="button" class="icon-btn editor-more" popovertarget="editorMenu" aria-label="More actions" title="More actions"><i class="fa-solid fa-ellipsis" aria-hidden="true"></i></button>
+      <a class="btn btn-primary editor-done" href="/content/<%= href %>" title="Done (Esc)">Done</a>
+    </div>
+  </div>
+  <div class="editor-meta">
+    <nav class="crumbs" aria-label="Folder">
+      <% crumbs.forEach(function (crumb) { %><% if (crumb.href) { %><a href="<%= crumb.href %>"><%= crumb.name %></a><% } else { %><span><%= crumb.name %></span><% } %><span class="crumb-sep" aria-hidden="true">/</span><% }) %>
+    </nav>
+    <%- metadata %>
+  </div>
+  <input class="editor-title" type="text" value="<%= name %>" aria-label="Page name" autocomplete="off" spellcheck="false" enterkeyhint="done">
+  <p class="editor-title-error" role="alert" hidden></p>
+  <div class="editor-conflict" role="alert" hidden>
+    <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+    <p>This page changed elsewhere. <strong>Keep mine</strong> saves yours (theirs goes to .trash). <strong>Load theirs</strong> opens theirs (yours is saved as “<%= name %> (conflict)”).</p>
+    <div class="editor-conflict-actions">
+      <button type="button" class="btn editor-load">Load theirs</button>
+      <button type="button" class="btn btn-primary editor-keep">Keep mine</button>
+    </div>
+  </div>
+  <div class="editor-panes">
+    <textarea class="editor-text" aria-label="Page content" placeholder="Start writing…" spellcheck="true" autocapitalize="sentences" enterkeyhint="enter" rows="1">
+<%= text %></textarea>
+    <div class="editor-preview" aria-label="Preview" aria-live="polite" hidden></div>
+  </div>
+</div>
+<div class="menu" id="editorMenu" popover role="menu" aria-label="More actions">
+  <% if (download) { %>
+  <a class="menu-item" role="menuitem" href="/download/<%= href %>" download><i class="fa-solid fa-download" aria-hidden="true"></i>Download</a>
+  <% } %>
+  <% if (history) { %>
+  <button type="button" class="menu-item editor-history" role="menuitem"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>History</button>
+  <% } %>
+  <button type="button" class="menu-item menu-danger editor-delete" role="menuitem"><i class="fa-regular fa-trash-can" aria-hidden="true"></i>Delete…</button>
+</div>
+<dialog class="confirm" id="deleteDialog" aria-labelledby="deleteTitle" aria-describedby="deleteText">
+  <form method="dialog">
+    <h2 id="deleteTitle">Delete “<span class="confirm-name"><%= name %></span>”?</h2>
+    <p id="deleteText">The page moves to <code>.trash</code>, so you can still get it back.</p>
+    <div class="confirm-actions">
+      <button class="btn" value="cancel" autofocus>Cancel</button>
+      <button class="btn btn-danger" value="delete">Delete</button>
+    </div>
+  </form>
+</dialog>
+<% if (history) { %>
+<dialog class="confirm history-dialog" id="historyDialog" aria-labelledby="historyTitle">
+  <form method="dialog">
+    <h2 id="historyTitle">History</h2>
+    <p class="history-status" role="status"></p>
+    <ul class="history-list"></ul>
+    <div class="confirm-actions">
+      <button class="btn" value="cancel">Close</button>
+    </div>
+  </form>
+</dialog>
+<% } %>

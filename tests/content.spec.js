@@ -1,14 +1,16 @@
 import { test, expect } from "@playwright/test";
+import { openFolder, openNav } from "./helpers.js";
+import { downloadHref } from "../public/slug.mjs";
 
 test.describe("Content Loading & Rendering", () => {
   test("homepage loads and redirects to first content", async ({ page }) => {
     await page.goto("/");
 
     // Should redirect to a content page
-    await expect(page).toHaveURL(/\/content\/.+/);
+    await expect(page).toHaveURL(/\/content\/.+/u);
 
     // Should have the site title
-    await expect(page).toHaveTitle(/.*Home.* - .*/);
+    await expect(page).toHaveTitle(/.*Home.* - .*/u);
 
     // Content should be loaded
     const content = page.locator("#file-content");
@@ -25,7 +27,7 @@ test.describe("Content Loading & Rendering", () => {
 
     // Should have markdown-body class for styling
     const content = page.locator("#file-content");
-    await expect(content).toHaveClass(/.*markdown-body.*/);
+    await expect(content).toHaveClass(/.*markdown-body.*/u);
   });
 
   test("syntax highlighting works", async ({ page }) => {
@@ -50,29 +52,17 @@ test.describe("Content Navigation", () => {
     // Check if on mobile and open sidebar if needed
     const viewportSize = page.viewportSize();
     if (viewportSize && viewportSize.width <= 768) {
-      const collapseBtn = page.locator("#collapseSidebar");
-      await collapseBtn.click();
+      const menuToggle = page.locator("#menuToggle");
+      await menuToggle.click();
       await page.waitForTimeout(300);
     }
 
-    // Get all navigation links
-    const navLinks = page.locator('.sidebar a[href^="/content/"]');
-    const linkCount = await navLinks.count();
-
-    if (linkCount > 1) {
-      // Click on a different content link
-      const secondLink = navLinks.nth(1);
-      const href = await secondLink.getAttribute("href");
-
-      await secondLink.click();
-
-      // Should navigate to new content
-      await expect(page).toHaveURL(href);
-
-      // Content should change
-      const content = page.locator("#file-content");
-      await expect(content).toBeVisible();
-    }
+    await openFolder(page, "Tests");
+    const link = page.locator('.sidebar a[href^="/content/tests/"]').first();
+    const href = await link.getAttribute("href");
+    await link.click();
+    await expect(page).toHaveURL(href);
+    await expect(page.locator("#file-content")).toBeVisible();
   });
 });
 
@@ -85,6 +75,8 @@ test.describe("Sidebar", () => {
     await expect(sidebar).toBeVisible();
 
     // Should have navigation links
+    await openNav(page);
+    await openFolder(page, "Posts");
     const navLinks = page.locator('.sidebar a[href^="/content/"]');
     const linkCount = await navLinks.count();
     expect(linkCount).toBeGreaterThanOrEqual(1);
@@ -103,11 +95,13 @@ test.describe("Download & Copy", () => {
     await page.goto("/content/Home.md");
 
     // Download button should be present
-    const downloadBtn = page.locator(".download-icon");
+    const downloadBtn = page.locator(
+      ".download-icon:visible, .topbar-download:visible",
+    );
     await expect(downloadBtn).toBeVisible();
 
     // Should have correct download URL
-    await expect(downloadBtn).toHaveAttribute("href", "/download/Home.md");
+    await expect(downloadBtn).toHaveAttribute("href", downloadHref("Home.md"));
 
     // Should have accessibility attributes
     await expect(downloadBtn).toHaveAttribute("title", "Download");

@@ -1,0 +1,23 @@
+<%_ if (backlinks.length > 0) { _%>
+<nav class="backlinks" aria-labelledby="molesk-backlinks">
+  <h2 id="molesk-backlinks" class="backlinks-heading">Linked from</h2>
+  <ul>
+<%_ backlinks.slice(0, 10).forEach(function (link) { _%>
+    <li><a href="<%= link.href %>"><%= link.title %></a></li>
+<%_ }) _%>
+  </ul>
+<%_ if (backlinks.length > 10) { _%>
+  <details>
+    <summary><%= backlinks.length - 10 %> more</summary>
+    <ul>
+<%_ backlinks.slice(10).forEach(function (link) { _%>
+      <li><a href="<%= link.href %>"><%= link.title %></a></li>
+<%_ }) _%>
+    </ul>
+  </details>
+<%_ } _%>
+</nav>
+<%_ } _%>
+<%_ if (pager) { _%>
+<%- include("pager", pager) _%>
+<%_ } _%>

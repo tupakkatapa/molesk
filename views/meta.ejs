@@ -1,0 +1,11 @@
+<%_ if (preview.description) { _%>
+  <meta name="description" content="<%= preview.description %>">
+  <meta property="og:description" content="<%= preview.description %>">
+<%_ } _%>
+  <meta property="og:title" content="<%= preview.title %>">
+  <meta property="og:type" content="<%= preview.type %>">
+  <meta property="og:url" content="<%= preview.url %>">
+<%_ if (preview.image) { _%>
+  <meta property="og:image" content="<%= preview.image %>">
+<%_ } _%>
+  <meta name="twitter:card" content="summary">
