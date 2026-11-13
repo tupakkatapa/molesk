@@ -12,6 +12,19 @@
     box-shadow: var(--shadow);
   }
 
+  .no-js .container {
+    flex-direction: column;
+  }
+
+  .no-js .sidebar {
+    position: static;
+    width: auto;
+    transform: none;
+    box-shadow: none;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
   .sidebar-head {
     padding-top: calc(var(--space-1) + env(safe-area-inset-top));
   }

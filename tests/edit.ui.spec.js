@@ -56,6 +56,42 @@ test.describe("Editor - Front Matter", () => {
   });
 });
 
+test.describe("Editor - Tags", () => {
+  const tags = (page) => page.locator(".editor-tags");
+
+  test("shows the page's tags and saves changed ones", async ({
+    page,
+    request,
+  }) => {
+    const { file } = await openNote(
+      page,
+      request,
+      "---\ndate: 2024-01-02\ntags:\n  - old\n  - two\n---\n\nHello\n",
+    );
+    await expect(tags(page)).toHaveValue("old, two");
+    await tags(page).fill("cards, two words");
+    await expect(status(page)).toHaveText("Saved");
+    expect(await serverText(request, file)).toBe(
+      '---\ndate: 2024-01-02\ntags: ["cards", "two words"]\n---\n\nHello\n',
+    );
+  });
+
+  test("adds a block to a page without one and removes it again", async ({
+    page,
+    request,
+  }) => {
+    const { file } = await openNote(page, request, "Hello\n");
+    await tags(page).fill("cards");
+    await expect(status(page)).toHaveText("Saved");
+    expect(await serverText(request, file)).toBe(
+      '---\ntags: ["cards"]\n---\n\nHello\n',
+    );
+    await tags(page).fill("");
+    await expect(status(page)).toHaveText("Saved");
+    expect(await serverText(request, file)).toBe("Hello\n");
+  });
+});
+
 test.describe("Editor - Opening", () => {
   test("edit button opens the editor with the raw text", async ({
     page,

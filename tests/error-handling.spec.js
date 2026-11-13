@@ -143,7 +143,7 @@ test.describe("Edge Cases", () => {
     }
 
     const themeToggle = jsDisabledPage.locator("#themeToggleIcon");
-    await expect(themeToggle).toBeVisible();
+    await expect(themeToggle).toBeHidden();
 
     await context.close();
   });

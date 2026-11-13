@@ -274,3 +274,17 @@ test.describe("Responsive Sizing", () => {
     }
   });
 });
+
+test.describe("Note Card", () => {
+  test("a short note's card ends at its content", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 1600 });
+    await page.goto("/");
+    const card = page.locator("#file-content");
+    const { height, content } = await card.evaluate((el) => {
+      const last = el.lastElementChild.getBoundingClientRect();
+      const box = el.getBoundingClientRect();
+      return { height: box.height, content: last.bottom - box.top };
+    });
+    expect(height - content).toBeLessThan(100);
+  });
+});

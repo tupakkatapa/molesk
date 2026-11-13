@@ -1,0 +1,51 @@
+Usage: molesk [file.md|directory] [options]
+
+Arguments:
+  file.md                  View one markdown file (opens the browser)
+  directory                Serve the markdown files in a directory
+
+Options:
+  -h, --help               Display this help information
+  -o, --open               Open the browser after starting
+  -a, --address <host>     Address to listen on (default: 0.0.0.0;
+                           127.0.0.1 for a single file or with --edit)
+  -p, --port <port>        Port to listen on, 1-65535 (default: 8080)
+  --url <url>              Public address for feed, sitemap and link-preview
+                           links (default: the address each request came in on)
+  -t, --title <text>       Site title (default: data source name)
+  -i, --image <path>       Profile picture
+  --image-size <size>      Picture beside the title (small) or above it
+                           (large, default)
+  -l, --link <icon:url>    Sidebar link with a FontAwesome icon, repeatable
+                           (e.g. --link fa-github:github.com/username)
+  --home <file>            Page shown at / (default: first of index.md,
+                           README.md, Home.md; none with --edit);
+                           --no-home shows the index
+  --theme <name>           Default theme: dark, light or auto (default: dark)
+  --[no-]index             List folder contents at / and folder URLs, and the
+                           tag pages at /tags/ (default: on)
+  --[no-]download          Markdown downloads at /download (default: on)
+  --[no-]search            Search box over the sidebar (default: on)
+  --[no-]rss               RSS feed at /rss.xml (default: on, off with --edit)
+  --[no-]source            Source code link in the sidebar (default: on, off with --edit)
+  --[no-]pager             Previous and next page links under a page (default: off)
+  --[no-]backlinks         "Linked from" list under a page (default: off)
+  --[no-]toc               Table of contents on long pages (default: off)
+  --[no-]position          Reopen a page where the reader left it (default: on)
+  --check                  Print broken links between notes and exit: 0 when
+                           none, 1 when some, 2 when a path can't be read
+  --edit                   Create, edit and delete pages in the browser; needs
+                           a writable directory (add --auth-file before
+                           exposing it beyond this machine)
+  --git                    With --edit, keep every change in a git repository in
+                           the directory; the editor's History restores them
+  --auth-file <path>       Require a login for every page: a file of
+                           user:password lines, passwords 15+ characters
+  --allowed-host <name>    With --edit or --auth-file, a host name the site is
+                           reached by besides localhost, e.g. the HTTPS proxy's;
+                           repeatable, others get 421
+
+Examples:
+  molesk README.md         View one file
+  molesk ./docs            Serve a docs directory
+  molesk ./docs --edit     Edit in the browser on 127.0.0.1

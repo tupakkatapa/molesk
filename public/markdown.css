@@ -28,13 +28,233 @@
   height: auto;
   cursor: zoom-in;
   border-radius: 8px;
-  opacity: 0;
-  transition: opacity 0.3s ease;
 }
 
-.markdown-body img.loaded,
-.editor-preview img {
+.markdown-body video {
+  display: block;
+  max-width: 100%;
+  max-height: 80vh;
+  border-radius: 8px;
+  background: #000;
+}
+
+.player {
+  position: relative;
+  margin: var(--space-5) 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #000;
+}
+
+.player video {
+  display: block;
+  width: 100%;
+  max-width: none;
+  max-height: 80vh;
+  border-radius: 0;
+  object-fit: contain;
+  cursor: pointer;
+}
+
+.player video[hidden] {
+  display: none;
+}
+
+.player:fullscreen video {
+  height: 100%;
+  max-height: none;
+}
+
+.player.idle {
+  cursor: none;
+}
+
+/* The controls sit on the picture itself, over a fade at its lower edge */
+.player-osd {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-6) var(--space-2) 2px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.65), transparent);
+  color: rgba(255, 255, 255, 0.9);
+  transition: opacity 0.25s var(--ease);
+}
+
+.player.idle:not(:has(:focus-visible)) .player-osd {
+  opacity: 0;
+}
+
+.player.failed .player-osd {
+  display: none;
+}
+
+.player-row {
+  display: flex;
+  align-items: center;
+}
+
+.player-osd .icon-btn,
+.player-speed {
+  width: auto;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 var(--space-2);
+  border: none;
+  background: none;
+  color: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.player-range {
+  --fill: 0%;
+  height: 14px;
+  margin: 0;
+  background: none;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.player-range::-webkit-slider-runnable-track {
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(
+    to right,
+    var(--accent) var(--fill),
+    rgba(255, 255, 255, 0.3) var(--fill)
+  );
+}
+
+.player-range::-moz-range-track {
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.player-range::-moz-range-progress {
+  height: 3px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+
+/* The thumb shows only while the slider is pointed at or has focus */
+.player-range::-webkit-slider-thumb {
+  width: 11px;
+  height: 11px;
+  margin-top: -4px;
+  border: none;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.player-range::-moz-range-thumb {
+  width: 11px;
+  height: 11px;
+  border: none;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0;
+}
+
+.player-range:hover::-webkit-slider-thumb,
+.player-range:focus-visible::-webkit-slider-thumb {
   opacity: 1;
+}
+
+.player-range:hover::-moz-range-thumb,
+.player-range:focus-visible::-moz-range-thumb {
+  opacity: 1;
+}
+
+.player-seek {
+  width: auto;
+  margin: 0 var(--space-2);
+}
+
+/* The volume slider opens to the left of the speaker, which stays where
+   the pointer is, when either is in use */
+.player-sound {
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
+}
+
+.player-volume {
+  width: 0;
+  opacity: 0;
+  transition:
+    width 0.15s var(--ease),
+    opacity 0.15s var(--ease);
+}
+
+.player-sound:hover .player-volume,
+.player-sound:has(:focus-visible) .player-volume {
+  width: 64px;
+  margin-left: var(--space-2);
+  opacity: 1;
+}
+
+.player-time {
+  margin-right: auto;
+  padding: 0 var(--space-1);
+  font-family: var(--serif);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  opacity: 0.85;
+}
+
+.player-speed {
+  font-family: var(--serif);
+  font-variant-numeric: tabular-nums;
+}
+
+.player-menu {
+  min-width: 96px;
+}
+
+.player-menu [aria-current] {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.player-osd .icon-btn:focus-visible,
+.player-speed:focus-visible,
+.player-range:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: -2px;
+  border-radius: var(--radius-sm);
+  box-shadow: none;
+}
+
+@media (hover: hover) {
+  .player-osd .icon-btn:hover,
+  .player-speed:hover {
+    color: #fff;
+  }
+}
+
+.player-error {
+  margin: 0;
+  padding: var(--space-6) var(--space-4);
+  color: #d8d0c4;
+  font-size: 14px;
+  text-align: center;
+}
+
+/* Phones set the volume with their own buttons */
+@media (hover: none) {
+  .player-volume {
+    display: none;
+  }
 }
 
 /* Image lightbox */
@@ -636,12 +856,12 @@
   margin-top: var(--space-5);
 }
 
-/* Tag chips under the date caption */
+/* Tag chips at the foot of the page */
 .tag-list {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
-  margin: 0 0 var(--space-4);
+  margin: var(--space-5) 0 0;
   padding: 0;
   list-style: none;
 }
@@ -663,6 +883,47 @@
   }
 }
 
-.markdown-body .tag-list + * {
-  margin-top: 0;
+/* The page's own headings, closed until asked for */
+.toc {
+  margin: var(--space-4) 0 var(--space-5);
+  font-size: 14.5px;
+}
+
+.toc summary {
+  width: fit-content;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.toc summary:focus-visible {
+  outline: none;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--focus);
+}
+
+.markdown-body .toc ul {
+  margin: var(--space-2) 0 0;
+  padding: 0 0 0 var(--space-4);
+  border-left: 2px solid var(--border);
+  list-style: none;
+}
+
+.markdown-body .toc li {
+  margin: 0;
+  line-height: 1.9;
+}
+
+.toc .toc-2 {
+  padding-left: var(--space-4);
+}
+
+.toc a {
+  color: var(--text);
+  text-decoration: none;
+}
+
+@media (hover: hover) {
+  .toc a:hover {
+    color: var(--accent);
+  }
 }

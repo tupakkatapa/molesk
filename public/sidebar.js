@@ -1,4 +1,4 @@
-import { CONFIG, el } from "./dom.js";
+import { CONFIG, el, store } from "./dom.js";
 import { folderHref } from "./slug.mjs";
 
 export const mobileQuery = window.matchMedia(
@@ -91,7 +91,7 @@ export function setFolderOpen(folder, open) {
 }
 
 export const rememberFolder = (path, open) =>
-  localStorage.setItem(FOLDER_KEY + path, open ? "open" : "closed");
+  store.set(FOLDER_KEY + path, open ? "open" : "closed");
 
 function openAncestors(item) {
   for (
@@ -107,7 +107,7 @@ function openAncestors(item) {
 // start open.
 export function applyFolderState() {
   for (const folder of document.querySelectorAll(".sidebar li.folder")) {
-    if (localStorage.getItem(FOLDER_KEY + folder.dataset.path) === "open") {
+    if (store.get(FOLDER_KEY + folder.dataset.path) === "open") {
       setFolderOpen(folder, true);
     }
   }

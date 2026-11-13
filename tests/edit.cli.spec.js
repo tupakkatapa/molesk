@@ -55,7 +55,9 @@ test.describe("Edit Mode Startup", () => {
 
   test("read-only mode still binds all interfaces by default", async () => {
     const { stdout } = await startup("contents");
-    expect(stdout).toContain(`Running on http://localhost:${port}`);
+    expect(stdout).toContain(
+      `Running on all interfaces (http://localhost:${port})`,
+    );
   });
 
   test("help lists the edit flags", () => {

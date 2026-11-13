@@ -1,54 +1,41 @@
 import { CONFIG, el } from "./dom.js";
 import { renderDiagrams } from "./mermaid.js";
+import { restorePosition } from "./position.js";
 import { markActiveLink, mobileQuery, setSidebarOpen } from "./sidebar.js";
 
-// Code blocks get a header with their language and a copy button.
-export function enhanceCode(root = document) {
-  root.querySelectorAll(".markdown-body pre code").forEach((block) => {
-    const pre = block.parentNode;
+const CODE_HEADER =
+  '<div class="code-header"><span class="code-language"></span><button class="copy-button" title="Copy" aria-label="Copy code"><i class="fa-regular fa-copy"></i></button></div>';
 
-    // Extract language from class
-    const classes = block.className.split(" ");
-    const langClass = classes.find((c) => c.startsWith("language-"));
-    const lang = langClass ? langClass.replace("language-", "") : null;
-
-    // Create wrapper
-    const wrapper = document.createElement("div");
-    wrapper.className = "code-wrapper";
-
-    // Create header with language and copy button
-    const header = document.createElement("div");
-    header.className = "code-header";
-
-    const langBadge = document.createElement("span");
-    langBadge.className = "code-language";
-    langBadge.textContent = lang || "";
-
-    const copyButton = document.createElement("button");
-    copyButton.className = "copy-button";
-    copyButton.innerHTML = '<i class="fa-regular fa-copy"></i>';
-    copyButton.title = "Copy";
-    copyButton.setAttribute("aria-label", "Copy code");
-    copyButton.addEventListener("click", () => {
-      navigator.clipboard.writeText(block.textContent).then(() => {
-        const icon = copyButton.querySelector("i");
-        icon.classList.remove("fa-regular", "fa-copy");
-        icon.classList.add("fa-solid", "fa-check");
-        setTimeout(() => {
-          icon.classList.remove("fa-solid", "fa-check");
-          icon.classList.add("fa-regular", "fa-copy");
-        }, CONFIG.COPY_BUTTON_RESET_DELAY);
-      });
+function addCodeHeader(block) {
+  const pre = block.parentNode;
+  const wrapper = document.createElement("div");
+  wrapper.className = "code-wrapper";
+  wrapper.innerHTML = CODE_HEADER;
+  wrapper.querySelector(".code-language").textContent =
+    /(?:^|\s)language-(\S*)/u.exec(block.className)?.[1] ?? "";
+  const icon = wrapper.querySelector("i");
+  wrapper.querySelector("button").addEventListener("click", () => {
+    navigator.clipboard.writeText(block.textContent).then(() => {
+      icon.className = "fa-solid fa-check";
+      setTimeout(() => {
+        icon.className = "fa-regular fa-copy";
+      }, CONFIG.COPY_BUTTON_RESET_DELAY);
     });
-
-    header.append(langBadge);
-    header.append(copyButton);
-
-    pre.parentNode.replaceChild(wrapper, pre);
-    wrapper.append(header);
-    wrapper.append(pre);
   });
+  pre.replaceWith(wrapper);
+  wrapper.append(pre);
+}
+
+// Code blocks get a header with their language and a copy button; diagrams
+// and videos get drawn and their controls.
+export function enhance(root = document) {
+  for (const block of root.querySelectorAll(".markdown-body pre code")) {
+    addCodeHeader(block);
+  }
   renderDiagrams(root);
+  if (root.querySelector("video[controls]")) {
+    import("./player.js").then(({ enhanceVideos }) => enhanceVideos(root));
+  }
 }
 
 function setupImageLightbox() {
@@ -80,18 +67,17 @@ function setupImageLightbox() {
   };
 }
 
-function setupLazyImages() {
-  document.querySelectorAll(".markdown-body img").forEach((img) => {
-    if (img.complete) {
-      img.classList.add("loaded");
-    } else {
-      img.addEventListener("load", () => img.classList.add("loaded"));
-      img.addEventListener("error", () => img.classList.add("loaded"));
-    }
-  });
-}
-
 let shownPath = window.location.pathname;
+
+const byHash = (hash) => {
+  try {
+    return document.querySelector(
+      `#${CSS.escape(decodeURIComponent(hash.slice(1)))}`,
+    );
+  } catch {
+    return null;
+  }
+};
 
 async function navigateTo(href, { push = true } = {}) {
   if (el.sidebar && mobileQuery.matches) setSidebarOpen(false);
@@ -116,8 +102,7 @@ async function navigateTo(href, { push = true } = {}) {
   );
   const shown = new URL(response.url).pathname;
   document.dispatchEvent(new Event("content:loaded"));
-  enhanceCode();
-  setupLazyImages();
+  enhance();
 
   const title = response.headers.get("X-Page-Title");
   if (title) document.title = decodeURIComponent(title);
@@ -127,24 +112,21 @@ async function navigateTo(href, { push = true } = {}) {
     topbarTitle.textContent = decodeURIComponent(heading);
   syncTopbarEdit();
 
+  content.querySelector("h1")?.focus({ preventScroll: true });
   if (push) {
-    window.history.pushState({ href: shown }, "", shown);
-    window.scrollTo({ top: 0, behavior: "instant" });
-  } else if (shown !== window.location.pathname) {
-    window.history.replaceState({ href: shown }, "", shown);
+    const { hash } = new URL(href, window.location.href);
+    window.history.pushState({ href: shown }, "", shown + hash);
+    const target = hash && byHash(hash);
+    if (target) target.scrollIntoView();
+    else window.scrollTo({ top: 0, behavior: "instant" });
+  } else {
+    if (shown !== window.location.pathname) {
+      window.history.replaceState({ href: shown }, "", shown);
+    }
+    restorePosition();
   }
   shownPath = window.location.pathname;
   markActiveLink(shown);
-}
-
-function scrollToAnchor(e, anchor) {
-  const targetId = anchor.getAttribute("href").slice(1);
-  const target = document.querySelector(`#${CSS.escape(targetId)}`);
-  if (target) {
-    e.preventDefault();
-    target.scrollIntoView({ behavior: "smooth", block: "start" });
-    window.history.pushState({}, "", `#${targetId}`);
-  }
 }
 
 function setupClickHandling(openLightbox) {
@@ -163,9 +145,7 @@ function setupClickHandling(openLightbox) {
     if (!link) return;
     const href = link.getAttribute("href");
 
-    if (href.startsWith("#") && link.closest(".markdown-body")) {
-      scrollToAnchor(e, link);
-    } else if (
+    if (
       href.startsWith("/content/") &&
       href !== window.location.pathname &&
       document.querySelector("#file-content")
@@ -195,7 +175,6 @@ function syncTopbarEdit() {
 
 document.addEventListener("DOMContentLoaded", () => {
   syncTopbarEdit();
-  enhanceCode();
-  setupLazyImages();
+  enhance();
   setupClickHandling(setupImageLightbox());
 });

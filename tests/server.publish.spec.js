@@ -87,15 +87,18 @@ test.describe("Sitemap", () => {
 
 test.describe("Previous and next", () => {
   test("link neighbours in folder order", async ({ page }) => {
-    const { url } = await serve({
-      "posts/Old.md": dated("2026-01-01"),
-      "posts/Mid.md": dated("2026-02-01"),
-      "posts/New.md": dated("2026-03-01"),
-      "posts/Draft.md": `---\ndate: "2026-02-15"\ndraft: true\n---\n`,
-      "notes/One.md": "One\n",
-      "notes/Two.md": "Two\n",
-      "solo/Only.md": "Only\n",
-    });
+    const { url } = await serve(
+      {
+        "posts/Old.md": dated("2026-01-01"),
+        "posts/Mid.md": dated("2026-02-01"),
+        "posts/New.md": dated("2026-03-01"),
+        "posts/Draft.md": `---\ndate: "2026-02-15"\ndraft: true\n---\n`,
+        "notes/One.md": "One\n",
+        "notes/Two.md": "Two\n",
+        "solo/Only.md": "Only\n",
+      },
+      "--pager",
+    );
     await page.goto(`${url}/content/posts/Mid.md`);
     const pager = page.locator(".pager");
     await expect(pager.locator("a")).toHaveCount(2);

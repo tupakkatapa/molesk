@@ -181,11 +181,6 @@ body.no-scroll {
   width: 100%;
 }
 
-/* Short notes still fill the window with one surface */
-.main > .markdown-body {
-  flex: 1 0 auto;
-}
-
 /* Single file viewer mode */
 body.single-file-mode .main {
   margin-left: auto;
@@ -571,172 +566,99 @@ dialog.confirm code {
   white-space: nowrap;
 }
 
-/* Quick switcher (Ctrl+K) */
-dialog.switcher {
-  box-sizing: border-box;
-  width: min(600px, calc(100vw - 32px));
-  max-height: min(560px, calc(100dvh - 120px));
-  margin: 12vh auto auto;
-  padding: 0;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  background: var(--surface);
-  color: var(--text);
-  font-family: var(--serif);
-  box-shadow: var(--shadow);
-  overflow: hidden;
-}
-
-dialog.switcher[open] {
-  display: flex;
-  flex-direction: column;
-  animation: pop-in 0.16s var(--ease);
-}
-
-dialog.switcher::backdrop {
-  background: rgba(20, 16, 10, 0.45);
-  backdrop-filter: blur(2px);
-}
-
-.switcher-field {
-  display: flex;
-  flex: none;
-  align-items: center;
-  gap: var(--space-3);
-  padding: 0 var(--space-4);
-  border-bottom: 1px solid var(--border);
-  color: var(--muted);
-}
-
-.switcher-input {
-  flex: 1;
-  min-width: 0;
-  height: 56px;
-  padding: 0;
-  border: none;
-  background: none;
-  color: var(--heading);
-  font: inherit;
-  font-size: 17px;
-}
-
-.switcher-input:focus {
-  outline: none;
-}
-
-.switcher-input::placeholder {
-  color: var(--placeholder);
-  opacity: 1;
-}
-
-.switcher-key {
-  padding: 2px 6px;
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  color: var(--muted);
-  font-family: var(--serif);
-  font-size: 11.5px;
-}
-
-.switcher-list {
-  margin: 0;
-  padding: var(--space-2);
-  overflow-y: auto;
-  list-style: none;
-}
-
-.switcher-list:empty {
-  display: none;
-}
-
-.switcher-list li {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-}
-
-.switcher-list li[aria-selected="true"] {
-  background: var(--pressed);
-}
-
-@media (hover: hover) {
-  .switcher-list li:hover {
-    background: var(--hover);
+/* On paper: the text alone, dark on white, with its links spelled out */
+@media print {
+  :root,
+  [data-theme="dark"] {
+    color-scheme: light;
+    --bg: #fff;
+    --surface: #fff;
+    --text: #000;
+    --heading: #000;
+    --muted: #444;
+    --border: #bbb;
+    --accent: #000;
+    --code-bg: #f4f4f4;
+    --code-head: #eaeaea;
   }
 
-  .switcher-list li[aria-selected="true"]:hover {
-    background: var(--pressed);
+  .sidebar,
+  .sidebar-backdrop,
+  .topbar,
+  .note-actions,
+  .pager,
+  .backlinks,
+  .toc,
+  .copy-button,
+  .player-osd,
+  .single-file-theme-toggle {
+    display: none !important;
   }
-}
 
-.switcher-title {
-  overflow: hidden;
-  color: var(--heading);
-  font-weight: 600;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
+  .container,
+  .main {
+    display: block;
+    width: 100%;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+  }
 
-.switcher-detail {
-  overflow: hidden;
-  color: var(--muted);
-  font-size: 13.5px;
-  line-height: 1.5;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.switcher-detail:empty {
-  display: none;
-}
-
-.switcher-detail mark {
-  border-radius: 3px;
-  background: var(--mark);
-  color: var(--heading);
-}
-
-.switcher-create .switcher-title {
-  color: var(--accent);
-  font-weight: 400;
-}
-
-.switcher-create .switcher-title::before {
-  content: "+";
-  display: inline-block;
-  width: 1em;
-  font-weight: 700;
-}
-
-.switcher-note {
-  margin: 0;
-  padding: var(--space-4);
-  color: var(--muted);
-  font-size: 14px;
-  text-align: center;
-}
-
-.switcher-note:empty {
-  display: none;
-}
-
-@media (max-width: 768px) {
-  dialog.switcher {
+  .main .markdown-body {
     max-width: none;
-    max-height: calc(100dvh - 72px - env(safe-area-inset-top));
-    margin: calc(8px + env(safe-area-inset-top)) 8px auto;
-    width: calc(100% - 16px);
+    padding: 0;
+    border: none;
   }
 
-  .switcher-key {
-    display: none;
+  .markdown-body a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.85em;
+    overflow-wrap: anywhere;
   }
 
-  .switcher-list li {
-    min-height: 44px;
-    justify-content: center;
+  .markdown-body pre {
+    white-space: pre-wrap;
   }
+
+  h1,
+  h2,
+  h3 {
+    break-after: avoid;
+  }
+
+  pre,
+  img,
+  video,
+  table,
+  blockquote {
+    break-inside: avoid;
+  }
+}
+
+.skip-link {
+  position: absolute;
+  top: var(--space-1);
+  left: var(--space-1);
+  z-index: 10002;
+  padding: var(--space-1) var(--space-2);
+  background: var(--bg);
+  color: var(--text);
+  transform: translateY(-200%);
+}
+
+.skip-link:focus {
+  transform: none;
+}
+
+/* Without JavaScript: no controls that need it, every folder open */
+.no-js .tree-search,
+.no-js .theme-toggle,
+.no-js .menu-btn,
+.no-js .sidebar-close,
+.no-js .topbar-search {
+  display: none;
+}
+
+.no-js li.folder > ul {
+  display: block !important;
 }

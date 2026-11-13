@@ -1,6 +1,12 @@
 import { test, expect } from "@playwright/test";
 import { execFileSync, spawnSync } from "node:child_process";
-import { chmodSync, mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import {
+  chmodSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  writeFileSync,
+} from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { useServers } from "./server.js";
@@ -131,6 +137,24 @@ test("an existing repository's hooks never run", async ({ request }) => {
   await save(request, url, "Note.md", "# B\n");
   await request.get(`${url}/api/history/Note.md`);
   expect(gitLog(dir)[0]).toBe("molesk|Edit Note.md");
+});
+
+test("git variables of the calling shell are ignored", async ({ request }) => {
+  const stray = path.join(
+    mkdtempSync(path.join(os.tmpdir(), "molesk-env-")),
+    "index",
+  );
+  process.env.GIT_INDEX_FILE = stray;
+  try {
+    const { url, dir } = await serve({ "Note.md": "# A\n" }, "--edit", "--git");
+    await save(request, url, "Note.md", "# B\n");
+    await request.get(`${url}/api/history/Note.md`);
+    delete process.env.GIT_INDEX_FILE;
+    expect(gitLog(dir)[0]).toBe("molesk|Edit Note.md");
+    expect(existsSync(stray)).toBe(false);
+  } finally {
+    delete process.env.GIT_INDEX_FILE;
+  }
 });
 
 test.describe("--git refuses to start", () => {

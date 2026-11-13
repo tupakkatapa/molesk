@@ -30,6 +30,19 @@ test.describe("Titles", () => {
     expect(feed).toContain("<title>iPhone notes</title>");
   });
 
+  test("hyphens stay in names that have spaces", async ({ request }) => {
+    const { url } = await serve({
+      "Oven-Baked Feta Pasta.md": "Oven-Baked Feta Pasta\n",
+      "my-first-post.md": "Hello there.\n",
+    });
+    const index = await text(request, `${url}/`);
+    expect(index).toContain(
+      '<span class="index-title">Oven-Baked Feta Pasta</span></a>',
+    );
+    expect(index).toContain('<span class="index-title">My first post</span>');
+    expect(index).toContain('<span class="index-excerpt">Hello there.</span>');
+  });
+
   test("the editor keeps the raw name", async ({ request }) => {
     const { url } = await serve(FILES, "--edit");
     const editor = await text(request, `${url}/edit/my-post.md`);

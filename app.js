@@ -18,7 +18,9 @@ const { checkLinks } = require("./lib/check");
 const { tagRouter } = require("./lib/tags");
 const { createHistory } = require("./lib/history");
 const { withWriteLock } = require("./lib/files");
-const { securityHeaders } = require("./lib/headers");
+const { securityHeaders, staticOptions } = require("./lib/headers");
+const { removeStaleUploads } = require("./lib/assets");
+const { version } = require("./package.json");
 
 const config = parseArgs(defaultConfig());
 
@@ -52,7 +54,14 @@ app.use(securityHeaders);
 if (config.EDIT || config.AUTH) app.use(knownHost(config.ALLOWED_HOSTS));
 if (config.AUTH) app.use(basicAuth(config.AUTH));
 
-app.use(express.static(path.join(__dirname, "public"), { maxAge: "1h" }));
+// Its own files are checked again on every load, so a page never runs
+// scripts from before an upgrade; the versioned vendor files may be kept.
+app.use(
+  express.static(
+    path.join(__dirname, "public"),
+    staticOptions(__dirname, version),
+  ),
+);
 const VENDOR = {
   fontawesome: "@fortawesome/fontawesome-free",
   literata: "@fontsource-variable/literata/files",
@@ -62,9 +71,10 @@ const VENDOR = {
 for (const [name, dir] of Object.entries(VENDOR)) {
   app.use(
     `/vendor/${name}`,
-    express.static(path.join(__dirname, "node_modules", dir), {
-      maxAge: "1h",
-    }),
+    express.static(
+      path.join(__dirname, "node_modules", dir),
+      staticOptions(__dirname, version, "1h"),
+    ),
   );
 }
 app.set("view engine", "ejs");
@@ -79,8 +89,12 @@ Object.assign(app.locals, {
   socialLinks: config.SOCIAL_LINKS,
   sourceLink: config.SHOW_SOURCE ? config.SOURCE_LINK : null,
   showRss: config.SHOW_RSS,
+  showPosition: config.SHOW_POSITION,
 });
-if (config.EDIT) app.use(editRouter(config, invalidateAll, history));
+if (config.EDIT) {
+  removeStaleUploads(config.CONTENTS_DIR);
+  app.use(editRouter(config, invalidateAll, history));
+}
 
 app.use(pageRouter(config));
 app.use(tagRouter(config));
@@ -114,8 +128,9 @@ function commitOnExit(server) {
 
 function listen() {
   const server = app.listen(config.PORT, config.HOST, () => {
-    const url = `http://${config.HOST === "0.0.0.0" ? "localhost" : config.HOST}:${config.PORT}`;
-    console.log(`Running on ${url}`);
+    const all = config.HOST === "0.0.0.0";
+    const url = `http://${all ? "localhost" : config.HOST}:${config.PORT}`;
+    console.log(`Running on ${all ? `all interfaces (${url})` : url}`);
     if (config.AUTO_OPEN) {
       const openUrl = config.SINGLE_FILE
         ? url + pageHref(path.basename(config.SINGLE_FILE))

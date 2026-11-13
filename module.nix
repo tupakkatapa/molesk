@@ -82,9 +82,9 @@ in
       default = [ ];
       example = [ "notes.example.ts.net" ];
       description = ''
-        Edit mode: host names molesk is reached by besides localhost, i.e. the
-        name your HTTPS proxy forwards. Requests naming any other host get 421,
-        which stops DNS rebinding.
+        With edit mode or `authFile`: host names molesk is reached by besides
+        localhost, i.e. the name your HTTPS proxy forwards. Requests naming any
+        other host get 421, which stops DNS rebinding.
       '';
     };
 
@@ -139,7 +139,7 @@ in
       rss.enable = mkOption {
         type = types.nullOr types.bool;
         default = null;
-        description = "Show RSS feed link in the sidebar. Null keeps the mode default: on, off with edit mode.";
+        description = "RSS feed at `/rss.xml` and its link in the sidebar; false removes the route. Null keeps the mode default: on, off with edit mode.";
       };
 
       search.enable = mkOption {
@@ -149,9 +149,33 @@ in
       };
 
       download.enable = mkOption {
-        type = types.bool;
-        default = true;
-        description = "Show download button on content.";
+        type = types.nullOr types.bool;
+        default = null;
+        description = "Markdown downloads at `/download` and the download button; false removes the route. Null keeps the default: on.";
+      };
+
+      pager.enable = mkOption {
+        type = types.nullOr types.bool;
+        default = null;
+        description = "Previous and next page links under a page. Null keeps the default: off.";
+      };
+
+      backlinks.enable = mkOption {
+        type = types.nullOr types.bool;
+        default = null;
+        description = "\"Linked from\" list under a page. Null keeps the default: off.";
+      };
+
+      toc.enable = mkOption {
+        type = types.nullOr types.bool;
+        default = null;
+        description = "Table of contents on long pages. Null keeps the default: off.";
+      };
+
+      position.enable = mkOption {
+        type = types.nullOr types.bool;
+        default = null;
+        description = "Reopen a page where the reader left it. Null keeps the default: on.";
       };
 
       home = mkOption {
@@ -168,7 +192,7 @@ in
       index.enable = mkOption {
         type = types.nullOr types.bool;
         default = null;
-        description = "List folder contents at `/` and folder URLs. Null keeps the default: on.";
+        description = "List folder contents at `/` and folder URLs, and the tag pages at `/tags/`. Null keeps the default: on.";
       };
 
       url = mkOption {
@@ -258,9 +282,13 @@ in
         + optionalString (settings.imageSize != "large") "--image-size ${settings.imageSize} "
         + toggle "source" settings.source.enable
         + toggle "rss" settings.rss.enable
-        + optionalString (!settings.download.enable) "--no-download "
+        + toggle "download" settings.download.enable
         + toggle "index" settings.index.enable
         + toggle "search" settings.search.enable
+        + toggle "pager" settings.pager.enable
+        + toggle "backlinks" settings.backlinks.enable
+        + toggle "toc" settings.toc.enable
+        + toggle "position" settings.position.enable
         + optionalString (isString settings.home) "--home ${escapeShellArg settings.home} "
         + optionalString (settings.home == false) "--no-home "
         + optionalString (settings.theme != null) "--theme ${settings.theme} "
@@ -268,7 +296,7 @@ in
         + optionalString (cfg.authFile != null) "--auth-file \"$CREDENTIALS_DIRECTORY/auth\" "
         + optionalString cfg.edit.enable "--edit "
         + optionalString (cfg.edit.enable && cfg.edit.git.enable) "--git "
-        + concatMapStrings (host: "--allowed-host ${escapeShellArg host} ") (optionals cfg.edit.enable cfg.edit.allowedHosts)
+        + concatMapStrings (host: "--allowed-host ${escapeShellArg host} ") (optionals (cfg.edit.enable || cfg.authFile != null) cfg.edit.allowedHosts)
         + (concatStringsSep " " (map (item: "--link ${escapeShellArg "${item.fab}:${item.url}"}") settings.links));
     };
 

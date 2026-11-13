@@ -18,3 +18,22 @@ export const el = {
   hljsDark: document.querySelector("#highlightjs-dark"),
   themeColor: document.querySelector('meta[name="theme-color"]'),
 };
+
+// localStorage throws when the browser blocks it; then nothing is kept.
+export const store = {
+  get(key) {
+    try {
+      return localStorage.getItem(key);
+    } catch {
+      return null;
+    }
+  },
+  set(key, value) {
+    try {
+      localStorage.setItem(key, value);
+      return true;
+    } catch {
+      return false;
+    }
+  },
+};

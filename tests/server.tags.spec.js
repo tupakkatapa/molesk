@@ -15,6 +15,9 @@ test("tags show as chips linking to their page", async ({ request }) => {
   const page = await (await request.get(`${url}${pageHref("a.md")}`)).text();
   expect(page).toContain('<a class="tag" href="/tags/nixos/">NixOS</a>');
   expect(page).toContain('<a class="tag" href="/tags/notes/">notes</a>');
+  expect(page.indexOf('class="tag-list"')).toBeGreaterThan(
+    page.indexOf("</h1>"),
+  );
   const coerced = await (await request.get(`${url}${pageHref("c.md")}`)).text();
   expect(coerced).toContain('href="/tags/c/">C++</a>');
   expect(coerced).toContain('href="/tags/2026/">2026</a>');
@@ -57,4 +60,11 @@ test("without index pages, tags are plain text and their pages 404", async ({
   expect(page).toContain('<span class="tag">NixOS</span>');
   expect((await request.get(`${url}/tags/nixos/`)).status()).toBe(404);
   expect((await request.get(`${url}/tags/`)).status()).toBe(404);
+});
+
+test("the 404 page's sidebar has the Tags entry", async ({ request }) => {
+  const { url } = await serve(NOTES);
+  const response = await request.get(`${url}/content/missing`);
+  expect(response.status()).toBe(404);
+  expect(await response.text()).toContain('<li class="tree-tags">');
 });

@@ -1,6 +1,6 @@
-import { CONFIG, el } from "./dom.js";
+import { CONFIG, el, store } from "./dom.js";
 import { redrawDiagrams } from "./mermaid.js";
-import { setSidebarOpen } from "./sidebar.js";
+import { mobileQuery, setSidebarOpen } from "./sidebar.js";
 import "./search.js";
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function applyTheme(dark) {
   document.documentElement.dataset.theme = dark ? "dark" : "light";
-  localStorage.setItem("theme", dark ? "dark" : "light");
+  store.set("theme", dark ? "dark" : "light");
   el.hljsLight.disabled = dark;
   el.hljsDark.disabled = !dark;
   syncThemeColor();
@@ -25,7 +25,10 @@ function applyTheme(dark) {
 // The new theme spreads from the toggle as a circle.
 function toggleTheme() {
   const dark = document.documentElement.dataset.theme !== "dark";
-  if (!document.startViewTransition) {
+  if (
+    !document.startViewTransition ||
+    matchMedia("(prefers-reduced-motion: reduce)").matches
+  ) {
     applyTheme(dark);
     return;
   }
@@ -76,20 +79,7 @@ function setupKeyboardNavigation() {
         }
         break;
       case "Escape":
-        if (el.sidebar && !el.sidebar.classList.contains("collapsed")) {
-          setSidebarOpen(false);
-        }
-        break;
-      case "Home":
-        e.preventDefault();
-        window.scrollTo({ top: 0, behavior: "smooth" });
-        break;
-      case "End":
-        e.preventDefault();
-        window.scrollTo({
-          top: document.documentElement.scrollHeight,
-          behavior: "smooth",
-        });
+        if (el.sidebar && mobileQuery.matches) setSidebarOpen(false);
         break;
     }
   });
@@ -100,9 +90,9 @@ function setupRssCopyLink() {
   if (!rssLink) return;
 
   rssLink.addEventListener("click", (e) => {
+    if (!navigator.clipboard) return;
     e.preventDefault();
-    const rssUrl = window.location.origin + rssLink.dataset.rssUrl;
-    navigator.clipboard.writeText(rssUrl).then(() => {
+    navigator.clipboard.writeText(rssLink.href).then(() => {
       const icon = rssLink.querySelector("i");
       icon.classList.remove("fa-rss");
       icon.classList.add("fa-check");

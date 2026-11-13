@@ -135,8 +135,7 @@ test.describe("RSS Feed", () => {
     const rssBtn = page.locator(".rss-copy-link");
     await expect(rssBtn).toBeVisible();
 
-    // Should have RSS URL in data attribute
-    await expect(rssBtn).toHaveAttribute("data-rss-url", "/rss.xml");
+    await expect(rssBtn).toHaveAttribute("href", "/rss.xml");
 
     // RSS feed endpoint should be accessible
     const response = await page.request.get("/rss.xml");

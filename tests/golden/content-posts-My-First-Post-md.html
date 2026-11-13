@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark" data-theme-default="dark">
+<html lang="en" class="no-js" data-theme="dark" data-theme-default="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -33,6 +33,7 @@
   <div class="container">
     
     
+    <a class="skip-link" href="#file-content">Skip to content</a>
     <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
     <nav class="sidebar" id="sidebar" aria-label="Site navigation">
       
@@ -47,8 +48,7 @@
         
         
         <div class="tree-search">
-          <input type="search" class="tree-filter" placeholder="Search" title="Search (/)" aria-label="Search pages by name" autocomplete="off">
-          <button type="button" class="sidebar-search" aria-label="Search page text" title="Search page text (Ctrl+K)"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></button>
+          <input type="search" class="tree-filter" placeholder="Search" title="Search (/ or Ctrl+K)" aria-label="Search pages by name or text" autocomplete="off" enterkeyhint="go">
         </div>
         
         <div class="navigation-buttons">
@@ -63,7 +63,9 @@
 
           </ul>
           
+          <ul class="tree search-hits" style="--depth: 0" aria-label="Text matches" hidden></ul>
           <p class="tree-empty" role="status" hidden>No pages match</p>
+          <p class="search-status visually-hidden" role="status"></p>
           
         </div>
       </div>
@@ -71,10 +73,10 @@
       <div class="sidebar-links">
         
         
-        <a href="https://github.com/tupakkatapa/molesk" class="social-link" title="Source Code" aria-label="Source Code"><i class="fa-solid fa-code"></i></a>
+        <a href="https://github.com/tupakkatapa/molesk" class="social-link" title="Source Code" aria-label="Source Code"><i class="fa-solid fa-code" aria-hidden="true"></i></a>
         
         
-        <a href="#" class="social-link rss-copy-link" title="Copy RSS Feed Link" aria-label="Copy RSS Feed Link" data-rss-url="/rss.xml"><i class="fa-solid fa-rss"></i></a>
+        <a href="/rss.xml" class="social-link rss-copy-link" title="RSS feed" aria-label="RSS feed"><i class="fa-solid fa-rss" aria-hidden="true"></i></a>
         
       </div>
       
@@ -88,7 +90,7 @@
           <span class="topbar-title">My First Post</span>
           
         </div>
-        <button type="button" class="icon-btn topbar-search" aria-label="Search" title="Search (Ctrl+K)"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></button>
+        <button type="button" class="icon-btn topbar-search" aria-label="Search" title="Search"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></button>
         
         <a class="icon-btn topbar-edit" href="#" aria-label="Edit" title="Edit (e)" hidden><i class="fa-solid fa-pen" aria-hidden="true"></i></a>
         <a class="icon-btn topbar-download" href="#" aria-label="Download" title="Download" hidden><i class="fa-solid fa-download" aria-hidden="true"></i></a>
@@ -96,7 +98,7 @@
       </header>
       
       
-      <div id="file-content" class="markdown-body" data-path="posts/My First Post.md">
+      <div id="file-content" class="markdown-body" data-path="posts/My First Post.md" data-position>
         <div class="note-actions"><a href="/download/posts/my-first-post" class="icon-btn download-icon" title="Download" aria-label="Download"><i class="fa-solid fa-download" aria-hidden="true"></i></a></div>
         <div class="metadata"><time class="meta-date" datetime="2024-03-30">30 Mar 2024</time><span class="meta-read">1 min read</span></div><p>I use NixOS BTW</p>
 
@@ -104,19 +106,9 @@
       
     </main>
   </div>
-  <dialog class="switcher" aria-label="Go to a page">
-    <div class="switcher-field">
-      <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-      <input type="text" class="switcher-input" role="combobox" aria-label="Page name or text" aria-controls="switcherList" aria-expanded="true" aria-autocomplete="list" placeholder="Go to a page or search the text" autocomplete="off" spellcheck="false" enterkeyhint="go">
-      <kbd class="switcher-key">Esc</kbd>
-    </div>
-    <ul class="switcher-list" id="switcherList" role="listbox" aria-label="Pages"></ul>
-    <p class="switcher-note" role="status"></p>
-  </dialog>
 
   <script type="module" src="/main.js"></script>
   <script type="module" src="/content.js"></script>
-  <script type="module" src="/switcher.js"></script>
   
 </body>
 </html>

@@ -165,13 +165,15 @@ test.describe("Preview - Images", () => {
 });
 
 test.describe("Uploads - Moving the page", () => {
-  test("its images follow it; shared ones are copied", async ({ request }) => {
+  test("its media follow it; shared ones are copied", async ({ request }) => {
     const { url, dir } = await serve(
       {
-        "a/Page.md": '![](<assets/Page 1.png>)\n![](./assets/Shared.png "t")\n',
+        "a/Page.md":
+          '![](<assets/Page 1.png>)\n![](./assets/Shared.png "t")\n![](assets/Clip.mp4)\n',
         "a/Other.md": "![](assets/Shared.png)\n",
         "a/assets/Page 1.png": "one",
         "a/assets/Shared.png": "shared",
+        "a/assets/Clip.mp4": "clip",
         "a/assets/Unrelated.png": "unrelated",
       },
       "--edit",
@@ -186,6 +188,8 @@ test.describe("Uploads - Moving the page", () => {
       "one",
     );
     expect(at("a/assets/Page 1.png")).toBe(false);
+    expect(at("b/assets/Clip.mp4")).toBe(true);
+    expect(at("a/assets/Clip.mp4")).toBe(false);
     expect(at("b/assets/Shared.png")).toBe(true);
     expect(at("a/assets/Shared.png")).toBe(true);
     expect(at("b/assets/Unrelated.png")).toBe(false);

@@ -157,10 +157,10 @@ test.describe("Keyboard", () => {
     await expect(page.locator(".sidebar")).not.toHaveClass(/collapsed/u);
   });
 
-  test("Escape still collapses the sidebar", async ({ page }) => {
+  test("Escape leaves the wide sidebar open", async ({ page }) => {
     await page.setViewportSize({ width: 1200, height: 800 });
     await page.goto("/content/Home.md");
     await page.keyboard.press("Escape");
-    await expect(page.locator(".sidebar")).toHaveClass(/collapsed/u);
+    await expect(page.locator(".sidebar")).not.toHaveClass(/collapsed/u);
   });
 });

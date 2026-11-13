@@ -1,7 +1,7 @@
 // Page addresses: each segment lowercased, apostrophes dropped and any other
 // run of characters that are not letters or digits turned into one "-";
 // a page's own segment loses its .md/.txt extension.
-const NOTE_EXT = /\.(?:md|txt)$/iu;
+export const NOTE_EXT = /\.(?:md|txt)$/iu;
 
 export function slugSegment(name) {
   const slug = name
@@ -15,23 +15,29 @@ export function slugSegment(name) {
 
 export const slugNote = (name) => slugSegment(name.replace(NOTE_EXT, ""));
 
-const encode = (segments) =>
-  segments.map((segment) => encodeURIComponent(segment)).join("/");
+export const encode = (rel) =>
+  rel
+    .split("/")
+    .map((segment) => encodeURIComponent(segment))
+    .join("/");
 
 // `rel` uses "/" separators.
 export function slugPath(rel, { note = true } = {}) {
   const segments = rel.split("/").filter(Boolean);
   return encode(
-    segments.map((segment, i) =>
-      note && i === segments.length - 1
-        ? slugNote(segment)
-        : slugSegment(segment),
-    ),
+    segments
+      .map((segment, i) =>
+        note && i === segments.length - 1
+          ? slugNote(segment)
+          : slugSegment(segment),
+      )
+      .join("/"),
   );
 }
 
 export const pageHref = (rel) => `/content/${slugPath(rel)}`;
 export const editHref = (rel) => `/edit/${slugPath(rel)}`;
 export const downloadHref = (rel) => `/download/${slugPath(rel)}`;
+export const tagHref = (slug) => `/tags/${encodeURIComponent(slug)}/`;
 export const folderHref = (rel) =>
   rel ? `/content/${slugPath(rel, { note: false })}/` : "/";

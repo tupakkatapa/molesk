@@ -1,8 +1,8 @@
 import { replaceRange } from "./editor-format.js";
 import { report } from "./editor.js";
-import { encodeNotePath } from "./tree.js";
+import { encode } from "./slug.mjs";
 
-const historyUrl = (notePath) => `/api/history/${encodeNotePath(notePath)}`;
+const historyUrl = (notePath) => `/api/history/${encode(notePath)}`;
 const when = (date) =>
   new Date(date).toLocaleString(undefined, {
     dateStyle: "medium",

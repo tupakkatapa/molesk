@@ -63,7 +63,7 @@ test("links resolve by name and alias; drafts stay missing", async ({
 });
 
 test("pages list the notes linking to them", async ({ request }) => {
-  const { url } = await serve(NOTES, "--no-home");
+  const { url } = await serve(NOTES, "--no-home", "--backlinks");
   const known = await (
     await request.get(`${url}${pageHref("posts/Known.md")}`)
   ).text();

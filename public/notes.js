@@ -1,6 +1,7 @@
 import { setupMenu } from "./menu.js";
-import { encodeNotePath, errorText, parseName, shownPath } from "./tree.js";
-import { folderHref } from "./slug.mjs";
+import { errorText, parseName } from "./api.js";
+import { encode, folderHref } from "./slug.mjs";
+import "./tree.js";
 
 const TASK_LINE = /^(\s*(?:[-*+]|\d+[.)])\s+)\[[ xX]\]/u;
 const TOAST_TIME = 4000;
@@ -27,7 +28,7 @@ class ChangedElsewhere extends Error {}
 // page was rendered from, and each save moves the ETag on.
 async function toggleTask(box) {
   const note = document.querySelector("#file-content .edit-icon");
-  const url = `/api/files/${encodeNotePath(shownPath())}`;
+  const url = `/api/files/${encode(document.querySelector("#file-content").dataset.path)}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const etag = res.headers.get("ETag");
@@ -143,7 +144,7 @@ function startFolderRename(index) {
 
 async function deleteFolder(index) {
   const { path, parent } = index.querySelector(".folder-actions").dataset;
-  const res = await fetch(`/api/dirs/${encodeNotePath(path)}`, {
+  const res = await fetch(`/api/dirs/${encode(path)}`, {
     method: "DELETE",
   });
   if (res.status === 409) return folderError(index, "This folder isn't empty");

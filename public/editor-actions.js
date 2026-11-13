@@ -6,8 +6,9 @@ import {
   report,
   showConflict,
 } from "./editor.js";
-import { slugPath } from "./slug.mjs";
-import { errorText, NOTE_PATTERN, parseName, refreshTree } from "./tree.js";
+import { NOTE_EXT, slugPath } from "./slug.mjs";
+import { errorText, parseName } from "./api.js";
+import { refreshTree } from "./tree.js";
 import { setupMenu } from "./menu.js";
 
 const TITLE_ERRORS = {
@@ -22,15 +23,14 @@ function showTitleError(ed, message) {
   else ed.ui.title.removeAttribute("aria-invalid");
 }
 
-const noteName = (notePath) =>
-  notePath.split("/").pop().replace(NOTE_PATTERN, "");
+const noteName = (notePath) => notePath.split("/").pop().replace(NOTE_EXT, "");
 
 function targetPath(ed, value) {
   const parsed = parseName(value);
   if (parsed.error) return parsed;
   if (parsed.folder) return { error: "A page name can't end with /" };
   const { dir, ext } = ed.ui.root.dataset;
-  const file = NOTE_PATTERN.test(parsed.rel) ? parsed.rel : parsed.rel + ext;
+  const file = NOTE_EXT.test(parsed.rel) ? parsed.rel : parsed.rel + ext;
   return { path: dir + file };
 }
 

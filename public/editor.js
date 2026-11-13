@@ -1,4 +1,6 @@
-import { encodeNotePath, errorText } from "./tree.js";
+import { errorText } from "./api.js";
+import { encode } from "./slug.mjs";
+import { withTags } from "./front.mjs";
 
 const SAVE_DELAY = 800;
 const STATUS = {
@@ -14,6 +16,7 @@ function createEditor(root) {
     statuses: document.querySelectorAll(".editor-status"),
     conflict: root.querySelector(".editor-conflict"),
     title: root.querySelector(".editor-title"),
+    tags: root.querySelector(".editor-tags"),
     titleError: root.querySelector(".editor-title-error"),
     done: root.querySelector(".editor-done"),
     menu: document.querySelector("#editorMenu"),
@@ -24,7 +27,7 @@ function createEditor(root) {
     path: root.dataset.path,
     etag: root.dataset.etag,
     front: root.dataset.front,
-    acked: root.dataset.front + ui.textarea.value,
+    acked: root.dataset.front + ui.textarea.defaultValue,
     inflight: null,
     pending: null,
     timer: null,
@@ -41,7 +44,7 @@ export const isDirty = (ed) => fileText(ed) !== ed.acked;
 export function report(ed, text) {
   for (const status of ed.ui.statuses) status.textContent = text;
 }
-export const noteUrl = (ed) => `/api/files/${encodeNotePath(ed.path)}`;
+export const noteUrl = (ed) => `/api/files/${encode(ed.path)}`;
 const precondition = (ed) =>
   ed.etag ? { "If-Match": ed.etag } : { "If-None-Match": "*" };
 
@@ -168,7 +171,7 @@ async function loadTheirs(ed) {
   const name = ed.path.slice(dir.length, -ext.length);
   for (let n = 1; n <= MAX_COPIES; n++) {
     const copy = `${dir}${name} (conflict${n > 1 ? ` ${n}` : ""})${ext}`;
-    const res = await fetch(`/api/files/${encodeNotePath(copy)}`, {
+    const res = await fetch(`/api/files/${encode(copy)}`, {
       method: "PUT",
       headers: {
         "Content-Type": "text/markdown; charset=utf-8",
@@ -243,6 +246,10 @@ function setupKeys(ed) {
 function setupSaving(ed) {
   const { textarea } = ed.ui;
   textarea.addEventListener("input", () => schedule(ed));
+  ed.ui.tags.addEventListener("input", () => {
+    ed.front = withTags(ed.front, ed.ui.tags.value.split(","));
+    schedule(ed);
+  });
   textarea.addEventListener("blur", () => {
     if (isDirty(ed)) flush(ed);
   });
@@ -277,6 +284,9 @@ function setupEditor() {
   const ed = createEditor(root);
   setupGrow(ed.ui.textarea);
   setupSaving(ed);
+  // Text typed while the scripts were still loading differs from what the
+  // server sent, and is saved like any other edit.
+  if (isDirty(ed)) schedule(ed);
   guardLeaving(ed);
   setupKeys(ed);
   root.dispatchEvent(

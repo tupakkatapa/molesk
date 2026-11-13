@@ -81,6 +81,25 @@
   transition: border-color 0.15s var(--ease);
 }
 
+.editor-tags {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 2px 0;
+  border: none;
+  border-bottom: 1px solid transparent;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 13px;
+}
+
+.editor-tags:focus {
+  outline: none;
+  border-bottom-color: var(--border);
+  color: var(--text);
+}
+
 .editor-title:focus {
   outline: none;
   border-bottom-color: var(--border);

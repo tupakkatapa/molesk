@@ -114,6 +114,20 @@
                   };
                   script = "exec ${molesk}/bin/molesk /var/lib/molesk \\\n--port 8080 \\\n--address 127.0.0.1 \\\n--image-size small --rss --no-index --no-search --no-home --theme auto --url https://notes.test --auth-file \"$CREDENTIALS_DIRECTORY/auth\" --edit --git --allowed-host notes.test ";
                 }
+                {
+                  services = {
+                    edit.allowedHosts = [ "notes.test" ];
+                    authFile = "/run/secrets/molesk";
+                    settings = {
+                      download.enable = false;
+                      pager.enable = false;
+                      backlinks.enable = false;
+                      toc.enable = false;
+                      position.enable = true;
+                    };
+                  };
+                  script = "exec ${molesk}/bin/molesk /var/lib/molesk \\\n--port 8080 \\\n--address 0.0.0.0 \\\n--no-download --no-pager --no-backlinks --no-toc --position --auth-file \"$CREDENTIALS_DIRECTORY/auth\" --allowed-host notes.test ";
+                }
               ];
             in
             {

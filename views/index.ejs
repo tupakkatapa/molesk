@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="<%= theme === 'light' ? 'light' : 'dark' %>" data-theme-default="<%= theme %>">
+<html lang="en" class="no-js" data-theme="<%= theme === 'light' ? 'light' : 'dark' %>" data-theme-default="<%= theme %>">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -8,7 +8,7 @@
 <%_ if (showRss) { _%>
   <link rel="alternate" type="application/rss+xml" title="<%= title %>" href="/rss.xml">
 <%_ } _%>
-<%_ if (typeof preview !== "undefined") { _%>
+<%_ if (preview) { _%>
 <%- include("meta", { preview }) _%>
 <%_ } _%>
   <% if (image) { %>
@@ -33,16 +33,16 @@
   <link rel="stylesheet" id="highlightjs-dark" href="/vendor/highlight.js/github-dark.min.css">
   <script src="/theme.js"></script>
 </head>
-<body<% if (typeof singleFile !== 'undefined' && singleFile) { %> class="single-file-mode"<% } %>>
+<body<% if (singleFile) { %> class="single-file-mode"<% } %>>
   <div class="container">
-    <% if (typeof singleFile !== 'undefined' && singleFile) { %>
+    <% if (singleFile) { %>
     <button class="theme-toggle single-file-theme-toggle" id="themeToggleIcon" title="Toggle Theme" aria-label="Toggle between light and dark theme">
       <i class="fa-solid fa-circle-half-stroke"></i>
     </button>
     <% } %>
-<%_ const single = typeof singleFile !== "undefined" && singleFile; _%>
-<%_ const switcher = showSearch && !single; _%>
-    <% if (!single) { %>
+<%_ const search = showSearch && !singleFile; _%>
+    <% if (!singleFile) { %>
+    <a class="skip-link" href="#file-content">Skip to content</a>
     <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
     <nav class="sidebar" id="sidebar" aria-label="Site navigation">
       <% const profile = image && imageSize === "large"; %>
@@ -59,46 +59,52 @@
         <% } %>
         <% if (showSearch) { %>
         <div class="tree-search">
-          <input type="search" class="tree-filter" placeholder="Search" title="Search (/)" aria-label="Search pages by name" autocomplete="off">
-<%_ if (switcher) { _%>
-          <button type="button" class="sidebar-search" aria-label="Search page text" title="Search page text (Ctrl+K)"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></button>
-<%_ } _%>
+          <input type="search" class="tree-filter" placeholder="Search" title="Search (/ or Ctrl+K)" aria-label="Search pages by name or text" autocomplete="off" enterkeyhint="go"<% if (editMode) { %> data-create<% } %>>
         </div>
         <% } %>
         <div class="navigation-buttons">
           <ul class="tree" style="--depth: 0">
-            <%- include('tree', { items: tree, depth: 0, dir: '', current: typeof current === 'undefined' ? '' : current }) %>
+            <%- include('tree', { items: tree, depth: 0, dir: '', current }) %>
+<%_ if (sidebarTags.length > 0) { _%>
+<%_ sidebarTags.forEach(function (tag) { _%>
+            <li class="tree-tag" hidden><a class="tree-row" href="<%= tag.href %>"><i class="fa-solid fa-tag fa-fw" aria-hidden="true"></i><span class="tree-name"><%= tag.label %></span><span class="tree-count"><%= tag.count %></span></a></li>
+<%_ }) _%>
+            <li class="tree-tags"><a class="tree-row" href="/tags/"><i class="fa-solid fa-tags fa-fw" aria-hidden="true"></i><span class="tree-name">Tags</span></a></li>
+<%_ } _%>
           </ul>
           <% if (showSearch) { %>
+          <ul class="tree search-hits" style="--depth: 0" aria-label="Text matches" hidden></ul>
           <p class="tree-empty" role="status" hidden>No pages match</p>
+          <p class="search-status visually-hidden" role="status"></p>
           <% } %>
         </div>
       </div>
       <% if (socialLinks.length > 0 || sourceLink || showRss) { %>
       <div class="sidebar-links">
-        <% socialLinks.forEach(function(link) { %><a href="<%= link.href %>" class="social-link" aria-label="<%= link.fab.replace('fa-', '') %>"><i class="fab <%= link.fab %>"></i></a><% }); %>
+<%_ const names = { "x-twitter": "X", "linkedin-in": "LinkedIn", github: "GitHub" }; _%>
+        <% socialLinks.forEach(function(link) { const icon = link.fab.replace('fa-', ''); %><a href="<%= link.href %>" class="social-link" aria-label="<%= names[icon] ?? icon.charAt(0).toUpperCase() + icon.slice(1) %>"><i class="fab <%= link.fab %>" aria-hidden="true"></i></a><% }); %>
         <% if (sourceLink) { %>
-        <a href="<%= sourceLink %>" class="social-link" title="Source Code" aria-label="Source Code"><i class="fa-solid fa-code"></i></a>
+        <a href="<%= sourceLink %>" class="social-link" title="Source Code" aria-label="Source Code"><i class="fa-solid fa-code" aria-hidden="true"></i></a>
         <% } %>
         <% if (showRss) { %>
-        <a href="#" class="social-link rss-copy-link" title="Copy RSS Feed Link" aria-label="Copy RSS Feed Link" data-rss-url="/rss.xml"><i class="fa-solid fa-rss"></i></a>
+        <a href="/rss.xml" class="social-link rss-copy-link" title="RSS feed" aria-label="RSS feed"><i class="fa-solid fa-rss" aria-hidden="true"></i></a>
         <% } %>
       </div>
       <% } %>
     </nav>
     <% } %>
     <main class="main" role="main">
-      <% if (typeof singleFile === 'undefined' || !singleFile) { %>
+      <% if (!singleFile) { %>
       <header class="topbar">
         <button class="menu-btn icon-btn" id="menuToggle" aria-controls="sidebar" aria-label="Open navigation"><i class="fa-solid fa-bars" aria-hidden="true"></i></button>
         <div class="topbar-text">
-          <span class="topbar-title"><%= typeof heading !== 'undefined' ? heading : title %></span>
-          <% if (typeof editor !== 'undefined') { %><span class="editor-status topbar-status" aria-hidden="true"></span><% } %>
+          <span class="topbar-title"><%= heading %></span>
+          <% if (editor) { %><span class="editor-status topbar-status" aria-hidden="true"></span><% } %>
         </div>
-<%_ if (switcher) { _%>
-        <button type="button" class="icon-btn topbar-search" aria-label="Search" title="Search (Ctrl+K)"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></button>
+<%_ if (search) { _%>
+        <button type="button" class="icon-btn topbar-search" aria-label="Search" title="Search"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></button>
 <%_ } _%>
-        <% if (typeof editor !== 'undefined') { %>
+        <% if (editor) { %>
         <a class="btn btn-primary editor-done" href="/content/<%= editor.href %>">Done</a>
         <% } else { %>
         <a class="icon-btn topbar-edit" href="#" aria-label="Edit" title="Edit (e)" hidden><i class="fa-solid fa-pen" aria-hidden="true"></i></a>
@@ -106,28 +112,22 @@
         <% } %>
       </header>
       <% } %>
-      <% if (typeof editor !== 'undefined') { %>
+      <% if (editor) { %>
       <%- include('editor', editor) %>
       <% } else { %>
-      <div id="file-content" class="markdown-body" data-path="<%= typeof current === 'undefined' ? '' : current %>">
-        <%- typeof actions !== 'undefined' ? actions : '' %>
+      <div id="file-content" class="markdown-body" data-path="<%= current %>"<% if (showPosition) { %> data-position<% } %>>
+        <%- actions %>
         <%- initialContent %>
       </div>
       <% } %>
     </main>
   </div>
-<%_ if (switcher) { _%>
-<%- include("switcher") _%>
-<%_ } _%>
 
   <script type="module" src="/main.js"></script>
   <script type="module" src="/content.js"></script>
-<%_ if (switcher) { _%>
-  <script type="module" src="/switcher.js"></script>
-<%_ } _%>
   <% if (editMode) { %>
   <script type="module" src="/notes.js"></script>
-  <% if (typeof editor !== 'undefined') { %>
+  <% if (editor) { %>
   <script type="module" src="/editor-format.js"></script>
   <script type="module" src="/editor-preview.js"></script>
   <script type="module" src="/editor-actions.js"></script>

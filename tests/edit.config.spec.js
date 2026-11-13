@@ -74,6 +74,26 @@ test.describe("Option Table", () => {
   });
 });
 
+test.describe("Option Table - Help", () => {
+  const OUTSIDE_TABLE = new Set(["help", "open", "check"]);
+
+  test("holds every flag --help prints", () => {
+    const help = spawnSync("node", ["app.js", "--help"], {
+      encoding: "utf8",
+    }).stdout;
+    const flags = [
+      ...help.matchAll(/^ {2}(?:-[a-z], )?--(?:\[no-\])?([a-z-]+)/gmu),
+    ].map((match) => match[1]);
+    const table = optionTable()
+      .map((row) => row.flags)
+      .join(" ");
+    expect(flags.length).toBeGreaterThan(20);
+    for (const flag of flags.filter((name) => !OUTSIDE_TABLE.has(name))) {
+      expect(table, flag).toMatch(new RegExp(`\`--${flag}(?![a-z-])`, "u"));
+    }
+  });
+});
+
 test.describe("Option Validation", () => {
   test("rejects an unknown theme", () => {
     const result = spawnSync("node", ["app.js", "--theme", "blue"], {
